@@ -1,5 +1,6 @@
 node_modules/
 dist/
+build/
 .env
 .env.*
 !.env.example
@@ -8,3 +9,6 @@ dist/
 Thumbs.db
 node_modules
 .refact/
+
+# Uploaded files (user content – not committed)
+backend/uploads/
