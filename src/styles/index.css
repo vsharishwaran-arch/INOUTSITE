@@ -1,0 +1,1085 @@
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+
+/* ============================================
+   BASE RESET & GLOBAL TYPOGRAPHY
+   ============================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--foreground);
+  background-color: var(--background);
+  letter-spacing: 0.01em;
+  font-weight: 400;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+
+p {
+  line-height: 1.75;
+  color: #444;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+/* ============================================
+   SELECTION COLOR
+   ============================================ */
+
+::selection {
+  background-color: #0A0A0A;
+  color: #ffffff;
+}
+
+/* ============================================
+   ANNOUNCEMENT BAR MARQUEE
+   ============================================ */
+
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  animation: marquee-scroll 28s linear infinite;
+  display: flex;
+  width: max-content;
+  align-items: center;
+}
+
+.marquee-wrapper:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* ============================================
+   HERO CAROUSEL TRANSITIONS
+   ============================================ */
+
+.hero-slide-enter {
+  opacity: 0;
+  transform: translateX(40px);
+}
+.hero-slide-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.hero-slide-exit {
+  opacity: 1;
+}
+.hero-slide-exit-active {
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+/* ============================================
+   NAV LINK UNDERLINE ANIMATION
+   ============================================ */
+
+.nav-link {
+  position: relative;
+  padding-bottom: 2px;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: currentColor;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
+
+/* ============================================
+   PRODUCT CARD HOVER OVERLAY
+   ============================================ */
+
+.card-action-bar {
+  opacity: 0;
+  transform: translateY(100%);
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.group:hover .card-action-bar {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.card-wishlist-btn {
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.group:hover .card-wishlist-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ============================================
+   IMAGE ZOOM
+   ============================================ */
+
+.img-zoom img {
+  transition: transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.group:hover .img-zoom img {
+  transform: scale(1.08);
+}
+
+/* ============================================
+   BUTTON SYSTEM
+   ============================================ */
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 36px;
+  background-color: #0A0A0A;
+  color: #ffffff;
+  font-size: 11px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid #0A0A0A;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn-primary:hover {
+  background-color: transparent;
+  color: #0A0A0A;
+  border-color: #0A0A0A;
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 36px;
+  background-color: transparent;
+  color: #0A0A0A;
+  font-size: 11px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid #0A0A0A;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn-secondary:hover {
+  background-color: #0A0A0A;
+  color: #ffffff;
+}
+
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+
+.btn-ghost-white {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 36px;
+  background-color: transparent;
+  color: #ffffff;
+  font-size: 11px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn-ghost-white:hover {
+  background-color: #ffffff;
+  color: #0A0A0A;
+  border-color: #ffffff;
+}
+
+/* ============================================
+   FILTER PILLS
+   ============================================ */
+
+.filter-pill {
+  padding: 8px 20px;
+  font-size: 10px;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  white-space: nowrap;
+  font-weight: 500;
+  background: transparent;
+  color: #777;
+}
+
+.filter-pill.active,
+.filter-pill:hover {
+  background-color: #0A0A0A;
+  color: #ffffff;
+  border-color: #0A0A0A;
+}
+
+/* ============================================
+   SECTION DIVIDER
+   ============================================ */
+
+.section-label {
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.section-label::before,
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ============================================
+   FORM INPUTS
+   ============================================ */
+
+.form-input {
+  width: 100%;
+  padding: 16px 18px;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  color: #0A0A0A;
+  outline: none;
+  transition: border-color 0.3s ease;
+  border-radius: 0;
+  letter-spacing: 0.01em;
+}
+
+.form-input:focus {
+  border-color: #0A0A0A;
+}
+
+.form-input::placeholder {
+  color: #bbb;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.label-text {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #666;
+}
+
+/* ============================================
+   PAGE BANNER
+   ============================================ */
+
+.page-banner-overlay {
+  background: linear-gradient(
+    to top,
+    rgba(248,248,248,0.92) 0%,
+    rgba(248,248,248,0.5) 40%,
+    rgba(248,248,248,0.1) 100%
+  );
+}
+
+/* ============================================
+   BOOK-FLIP PRODUCT CARD (Uiverse - javierBarroso)
+   ============================================ */
+
+.book-wrap {
+  transform-style: preserve-3d;
+  perspective: 600px;
+  transition: transform 0.5s;
+  position: relative;
+}
+
+.book-wrap:hover {
+  transform: rotateZ(-10deg);
+}
+
+.book-cover {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transition: all 0.5s;
+  border-radius: 5px 0 0 5px;
+  overflow: hidden;
+  box-shadow: 1px 1px 12px #000;
+  z-index: 2;
+}
+
+.book-wrap:hover .book-cover {
+  transform: rotateY(-70deg);
+}
+
+.book-inner {
+  position: absolute;
+  inset: 0;
+  transform-origin: right center;
+  transition: all 0.5s;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 1px 1px 12px #000;
+  z-index: 1;
+}
+
+.book-wrap:hover .book-inner {
+  transform: rotateZ(25deg) rotateX(-30deg) rotateY(-10deg) translateX(140px);
+  box-shadow: 1px 1px 20px rgba(0, 0, 0, 0.667);
+}
+
+/* ============================================
+   HERO GRAIN TEXTURE OVERLAY
+   ============================================ */
+
+.hero-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+}
+
+/* ============================================
+   SHIMMER BUTTON EFFECT
+   ============================================ */
+
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255,255,255,0.18) 50%,
+    transparent 100%
+  );
+  transition: left 0.55s ease;
+  pointer-events: none;
+}
+
+.btn-shimmer:hover::before {
+  left: 160%;
+}
+
+/* ============================================
+   LAZY IMAGE BLUR-UP
+   ============================================ */
+
+.img-lazy {
+  filter: blur(12px);
+  transition: filter 0.6s ease;
+}
+
+.img-lazy.loaded {
+  filter: blur(0);
+}
+
+/* ============================================
+   SECTION FADE-IN ANIMATION
+   ============================================ */
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-slide-up {
+  animation: fadeSlideUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ============================================
+   HEADING ACCENT LINE
+   ============================================ */
+
+.heading-accent {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.heading-accent::before {
+  content: '';
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background: #e00000;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   FOOTER LINK HOVER UNDERLINE
+   ============================================ */
+
+.footer-link {
+  position: relative;
+  display: inline-block;
+}
+
+.footer-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #aaa;
+  transition: width 0.3s ease;
+}
+
+.footer-link:hover::after {
+  width: 100%;
+}
+
+/* ============================================
+   SPLASH LOADER
+   ============================================ */
+
+@keyframes splash-fade-out {
+  0%   { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; pointer-events: none; }
+}
+
+@keyframes splash-logo-in {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes splash-bar {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #0a0a0a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  animation: splash-fade-out 1.8s ease forwards;
+}
+
+.splash-logo {
+  animation: splash-logo-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.splash-bar-track {
+  width: 140px;
+  height: 1px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.splash-bar-fill {
+  height: 100%;
+  background: #e00000;
+  border-radius: 1px;
+  animation: splash-bar 1.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation-delay: 0.1s;
+}
+
+/* ============================================
+   SCROLL-TRIGGERED REVEAL (via JS class)
+   ============================================ */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================
+   PREFERS-REDUCED-MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .marquee-track {
+    animation: none !important;
+  }
+}
+
+/* ============================================
+   PRODUCT CARD — SMOOTH IMAGE CROSSFADE
+   ============================================ */
+
+.card-img-hover {
+  transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   REVIEW SECTION — QUOTE MARK
+   ============================================ */
+
+.review-quote::before {
+  content: '\201C';
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 48px;
+  line-height: 0;
+  color: rgba(255,255,255,0.12);
+  position: absolute;
+  top: 18px;
+  left: 14px;
+  pointer-events: none;
+}
+
+/* ============================================
+   CATEGORY CARD LABEL SLIDE
+   ============================================ */
+
+.cat-label {
+  transform: translateY(4px);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.group:hover .cat-label {
+  transform: translateY(0);
+}
+
+/* ============================================
+   CTA ARROW ANIMATION
+   ============================================ */
+
+.cta-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: gap 0.25s ease;
+}
+
+.cta-arrow:hover {
+  gap: 10px;
+}
+
+/* ============================================
+   RESPONSIVE TOUCH TARGETS
+   ============================================ */
+
+/* Touch-friendly targets — scoped to interactive nav/action elements only */
+@media (max-width: 640px) {
+  nav button,
+  nav a,
+  .btn-primary,
+  .btn-secondary {
+    min-height: 44px;
+  }
+}
+
+/* ============================================
+   SKELETON SHIMMER LOADER
+   ============================================ */
+
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Hide scrollbar but allow horizontal scroll */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ============================================
+   PROMO BANNER — REALISTIC FIRE EFFECT
+   Technique: blurred teardrop particles with
+   staggered rise & fade, overlapping to blend
+   ============================================ */
+
+/* --- Rising flame particle --- */
+@keyframes flameRise1 {
+  0%   { transform: rotate(-45deg) scale(1) translateY(0); opacity: 0.9; }
+  40%  { transform: rotate(-48deg) scale(1.1, 0.9) translateY(-2px); opacity: 1; }
+  70%  { transform: rotate(-42deg) scale(0.85, 1.15) translateY(-4px); opacity: 0.7; }
+  100% { transform: rotate(-45deg) scale(1) translateY(0); opacity: 0.9; }
+}
+
+@keyframes flameRise2 {
+  0%   { transform: rotate(-45deg) scale(0.9) translateY(0); opacity: 0.8; }
+  30%  { transform: rotate(-50deg) scale(1.05, 0.85) translateY(-3px); opacity: 0.95; }
+  60%  { transform: rotate(-40deg) scale(0.8, 1.2) translateY(-5px); opacity: 0.6; }
+  100% { transform: rotate(-45deg) scale(0.9) translateY(0); opacity: 0.8; }
+}
+
+@keyframes flameRise3 {
+  0%   { transform: rotate(-45deg) scale(1) translateY(0); opacity: 0.7; }
+  25%  { transform: rotate(-42deg) scale(1.15, 0.9) translateY(-1px); opacity: 0.85; }
+  55%  { transform: rotate(-50deg) scale(0.75, 1.2) translateY(-4px); opacity: 0.55; }
+  80%  { transform: rotate(-44deg) scale(0.95, 1.05) translateY(-2px); opacity: 0.75; }
+  100% { transform: rotate(-45deg) scale(1) translateY(0); opacity: 0.7; }
+}
+
+@keyframes flameRise4 {
+  0%   { transform: rotate(-45deg) scale(0.95) translateY(0); opacity: 0.65; }
+  35%  { transform: rotate(-38deg) scale(1.1, 0.8) translateY(-2px); opacity: 0.8; }
+  65%  { transform: rotate(-52deg) scale(0.7, 1.25) translateY(-5px); opacity: 0.5; }
+  100% { transform: rotate(-45deg) scale(0.95) translateY(0); opacity: 0.65; }
+}
+
+@keyframes flameTip {
+  0%   { transform: rotate(-45deg) scale(0.5, 0.3) translateY(0); opacity: 0.6; }
+  30%  { transform: rotate(-40deg) scale(0.8, 0.9) translateY(-3px); opacity: 0.85; }
+  50%  { transform: rotate(-50deg) scale(0.4, 0.5) translateY(-6px); opacity: 0.3; }
+  75%  { transform: rotate(-43deg) scale(0.7, 0.7) translateY(-2px); opacity: 0.7; }
+  100% { transform: rotate(-45deg) scale(0.5, 0.3) translateY(0); opacity: 0.6; }
+}
+
+@keyframes emberGlow {
+  0%   { opacity: 0.3; transform: translateX(-50%) scaleX(1); }
+  50%  { opacity: 0.55; transform: translateX(-50%) scaleX(1.15); }
+  100% { opacity: 0.3; transform: translateX(-50%) scaleX(1); }
+}
+
+/* Container — ambient glow halo */
+.promo-fire {
+  filter: drop-shadow(0 -1px 3px rgba(255, 100, 0, 0.45))
+          drop-shadow(0 0 8px rgba(255, 80, 0, 0.2));
+}
+
+/* Shared particle shape: teardrop via rotated rounded-corner square */
+.fire-p {
+  position: absolute;
+  border-radius: 0 50% 50% 50%;
+  transform-origin: center bottom;
+  will-change: transform, opacity;
+}
+
+/* Layer 1: outer red/orange body (largest) */
+.fire-p1 {
+  width: 14px;
+  height: 14px;
+  bottom: 2px;
+  left: 2px;
+  background: radial-gradient(ellipse at 50% 80%, #ff6a00 0%, #e03c00 60%, #aa1500 100%);
+  filter: blur(1.5px);
+  animation: flameRise1 2.4s ease-in-out infinite;
+  z-index: 2;
+}
+
+/* Layer 2: mid orange/yellow */
+.fire-p2 {
+  width: 11px;
+  height: 12px;
+  bottom: 3px;
+  left: 4px;
+  background: radial-gradient(ellipse at 50% 75%, #ffa500 0%, #ff6600 55%, #dd3300 100%);
+  filter: blur(1.2px);
+  animation: flameRise2 2s ease-in-out infinite;
+  z-index: 3;
+}
+
+/* Layer 3: inner yellow-white hot core */
+.fire-p3 {
+  width: 8px;
+  height: 10px;
+  bottom: 3px;
+  left: 5px;
+  background: radial-gradient(ellipse at 50% 70%, #ffee77 0%, #ffcc00 40%, #ff9500 100%);
+  filter: blur(1px);
+  animation: flameRise3 1.8s ease-in-out infinite;
+  z-index: 4;
+}
+
+/* Layer 4: brightest white-yellow center */
+.fire-p4 {
+  width: 5px;
+  height: 7px;
+  bottom: 4px;
+  left: 7px;
+  background: radial-gradient(ellipse at 50% 65%, #fff8e0 0%, #ffdd55 50%, #ffaa00 100%);
+  filter: blur(0.8px);
+  animation: flameRise4 1.5s ease-in-out infinite;
+  z-index: 5;
+}
+
+/* Layer 5: flickering tip — small, erratic */
+.fire-p5 {
+  width: 5px;
+  height: 6px;
+  bottom: 12px;
+  left: 6px;
+  background: radial-gradient(ellipse at 50% 60%, #ffee88 0%, #ffbb33 60%, transparent 100%);
+  filter: blur(1.5px);
+  animation: flameTip 2.6s ease-in-out infinite;
+  z-index: 6;
+}
+
+/* Layer 6: second tip offset for irregularity */
+.fire-p6 {
+  width: 4px;
+  height: 5px;
+  bottom: 14px;
+  left: 8px;
+  background: radial-gradient(ellipse at 50% 50%, #ffdd66 0%, #ff9933 70%, transparent 100%);
+  filter: blur(1.8px);
+  animation: flameTip 3s ease-in-out infinite 0.8s;
+  z-index: 6;
+}
+
+/* Ember glow at the base */
+.fire-glow {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 80, 0, 0.5) 0%, rgba(255, 50, 0, 0.15) 60%, transparent 100%);
+  animation: emberGlow 2.5s ease-in-out infinite;
+  z-index: 1;
+}
+
+/* ============================================
+   3D ROTATING PRODUCT CAROUSEL
+   ============================================ */
+
+/* ---- Cinematic Section Background ---- */
+@keyframes bgPan {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes smokeFloat {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0; }
+  20%  { opacity: 0.15; }
+  50%  { transform: translate(60px, -40px) scale(1.4); opacity: 0.08; }
+  80%  { opacity: 0.12; }
+  100% { transform: translate(0, 0) scale(1); opacity: 0; }
+}
+
+@keyframes threadFloat {
+  0%   { transform: translateY(100%) rotate(0deg); opacity: 0; }
+  10%  { opacity: 0.2; }
+  90%  { opacity: 0.15; }
+  100% { transform: translateY(-100%) rotate(360deg); opacity: 0; }
+}
+
+.carousel-section {
+  background: #0a0a0a;
+}
+
+.carousel-bg {
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(139, 0, 0, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(30, 30, 60, 0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(20, 20, 20, 1) 0%, rgba(10, 10, 10, 1) 100%);
+  background-size: 200% 200%;
+  animation: bgPan 20s ease-in-out infinite;
+}
+
+/* Floating smoke / fabric particles */
+.carousel-particle {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  animation: smokeFloat 12s ease-in-out infinite;
+}
+
+.carousel-particle-1 {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(139, 0, 0, 0.2), transparent);
+  top: 10%; left: 5%;
+  animation-delay: 0s;
+  animation-duration: 14s;
+}
+.carousel-particle-2 {
+  width: 250px; height: 250px;
+  background: radial-gradient(circle, rgba(60, 60, 120, 0.15), transparent);
+  top: 60%; right: 10%;
+  animation-delay: -3s;
+  animation-duration: 16s;
+}
+.carousel-particle-3 {
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(180, 140, 100, 0.12), transparent);
+  top: 30%; left: 50%;
+  animation-delay: -6s;
+  animation-duration: 18s;
+}
+.carousel-particle-4 {
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(100, 0, 0, 0.1), transparent);
+  bottom: 15%; left: 20%;
+  animation-delay: -2s;
+  animation-duration: 13s;
+}
+.carousel-particle-5 {
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(50, 50, 80, 0.12), transparent);
+  top: 15%; right: 25%;
+  animation-delay: -8s;
+  animation-duration: 15s;
+}
+
+/* ---- 3D Carousel Animations ---- */
+@keyframes autoRun3d {
+  from { transform: perspective(1000px) rotateY(-360deg); }
+  to   { transform: perspective(1000px) rotateY(0deg); }
+}
+
+@keyframes animateBrightness {
+  10%  { filter: brightness(1) saturate(1); }
+  50%  { filter: brightness(0.35) saturate(0.6); }
+  90%  { filter: brightness(1) saturate(1); }
+}
+
+@keyframes cardShine {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.card-3d {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  transform-style: preserve-3d;
+  transform: perspective(1000px);
+  animation: autoRun3d 25s linear infinite;
+  will-change: transform;
+}
+
+.card-3d .card-3d-item {
+  position: absolute;
+  width: 140px;
+  height: 190px;
+  border-radius: 14px;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  animation: animateBrightness 25s linear infinite;
+  will-change: transform, filter;
+  overflow: hidden;
+  background: linear-gradient(145deg, #1a1a1a 0%, #111 40%, #1a1a1a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    0 12px 40px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Glossy shine sweep */
+.card-3d .card-3d-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.15) 45%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.15) 55%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: cardShine 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Subtle inner border glow */
+.card-3d .card-3d-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.card-3d .card-3d-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.card-3d .card-3d-item a {
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.card-3d .card-3d-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.carousel-card-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 8px 8px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.carousel-card-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'Nunito Sans', sans-serif;
+}
+
+.carousel-card-price {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ff4444;
+  font-family: 'Nunito Sans', sans-serif;
+}
+
+@media (min-width: 640px) {
+  .carousel-card-name { font-size: 11px; }
+  .carousel-card-price { font-size: 12px; }
+}
+
+@media (min-width: 640px) {
+  .card-3d { height: 260px; }
+  .card-3d .card-3d-item { width: 170px; height: 230px; }
+}
+
+@media (min-width: 1024px) {
+  .card-3d { height: 320px; }
+  .card-3d .card-3d-item { width: 200px; height: 270px; }
+}
+

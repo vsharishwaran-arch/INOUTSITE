@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INOUT Fashion — Shoppable Video Reels</title>
+<style>
+/* ========================================================
+   RESET & TOKENS
+   ======================================================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --accent:      #00d4ff;
+  --accent-dim:  rgba(0,212,255,0.12);
+  --accent-glow: 0 0 24px rgba(0,212,255,0.45), 0 0 48px rgba(0,212,255,0.18);
+  --bg:          #0d0d0d;
+  --card-w:      220px;
+  --card-h:      330px;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #111;
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ========================================================
+   FRONTEND — VIDEO SECTION
+   ======================================================== */
+.video-section {
+  background: var(--bg);
+  padding: 90px 0 80px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Subtle noise grain overlay */
+.video-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.025;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.video-section__header {
+  display: flex;
+  align-items: flex-end;
+  gap: 28px;
+  padding: 0 52px;
+  margin-bottom: 52px;
+}
+
+.video-section__deco {
+  font-size: 140px;
+  font-weight: 900;
+  line-height: 0.8;
+  color: var(--accent);
+  opacity: 0.08;
+  letter-spacing: -10px;
+  user-select: none;
+  flex-shrink: 0;
+  transition: opacity 0.4s;
+}
+
+.video-section__titles { padding-bottom: 6px; flex: 1; }
+
+.video-section__eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.video-section__title {
+  font-size: clamp(28px, 4vw, 54px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: #fff;
+  position: relative;
+  display: inline-block;
+}
+
+.video-section__title::after {
+  content: '';
+  display: block;
+  height: 3px;
+  width: 52px;
+  background: var(--accent);
+  margin-top: 16px;
+  border-radius: 2px;
+  transition: width 0.4s ease, background 0.4s;
+}
+
+.video-section__subtitle {
+  font-size: 14px;
+  color: rgba(255,255,255,0.45);
+  margin-top: 14px;
+  font-weight: 300;
+  letter-spacing: 0.03em;
+}
+
+/* ── Scroll Track ── */
+.video-scroll-track {
+  display: flex;
+  gap: 18px;
+  padding: 12px 52px 36px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  cursor: grab;
+  user-select: none;
+}
+.video-scroll-track::-webkit-scrollbar { display: none; }
+.video-scroll-track.is-grabbing { cursor: grabbing; }
+
+/* ── Video Card ── */
+.video-card {
+  flex-shrink: 0;
+  width: var(--card-w);
+  height: var(--card-h);
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  cursor: pointer;
+  transition:
+    transform 0.4s cubic-bezier(0.22,1,0.36,1),
+    box-shadow 0.4s ease,
+    border-color 0.4s ease;
+}
+
+/* Shimmer skeleton while video loads */
+.video-card__shimmer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(110deg,
+    rgba(255,255,255,0.03) 25%,
+    rgba(255,255,255,0.07) 50%,
+    rgba(255,255,255,0.03) 75%);
+  background-size: 300% 100%;
+  animation: shimmer-sweep 1.8s linear infinite;
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
+.video-card.loaded .video-card__shimmer { opacity: 0; pointer-events: none; }
+
+@keyframes shimmer-sweep {
+  0%   { background-position: 150% 0; }
+  100% { background-position: -150% 0; }
+}
+
+.video-card:hover {
+  transform: scale(1.035) translateY(-6px);
+  border-color: var(--accent);
+  box-shadow: var(--accent-glow);
+}
+
+.video-card video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+/* Cinematic gradient */
+.video-card__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.10) 0%,
+    transparent 30%,
+    transparent 52%,
+    rgba(0,0,0,0.82) 100%
+  );
+}
+
+/* Label tag */
+.video-card__label {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 4;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 5px 11px;
+  border-radius: 5px;
+  background: var(--accent);
+  color: #000;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+}
+
+/* Play icon (hover) */
+.video-card__play {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.video-card:hover .video-card__play { opacity: 1; }
+
+.play-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255,255,255,0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.play-circle svg { fill: #fff; width: 18px; height: 18px; margin-left: 3px; }
+
+/* Bottom info */
+.video-card__bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  padding: 14px 14px 18px;
+}
+
+.video-card__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.35;
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.video-card__price {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.video-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--accent);
+  color: #000;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  border-radius: 100px;
+  white-space: nowrap;
+  transition: background 0.2s, transform 0.2s;
+}
+.video-card__cta:hover { background: #fff; transform: translateX(2px); }
+
+/* ========================================================
+   MODAL
+   ======================================================== */
+.modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.90);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 9000;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.22s ease;
+}
+.modal-backdrop.open { display: flex; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  display: flex;
+  width: 90vw;
+  max-width: 1100px;
+  height: 82vh;
+  max-height: 720px;
+  background: #111;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+  position: relative;
+  animation: slideUp 0.3s cubic-bezier(0.22,1,0.36,1);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Video side */
+.modal__video-side {
+  flex: 1;
+  position: relative;
+  background: #000;
+  min-width: 0;
+}
+.modal__video-side video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Speaker toggle */
+.modal__mute-btn {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 5;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.18);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.modal__mute-btn:hover {
+  background: rgba(0,0,0,0.85);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(0,212,255,0.3);
+}
+.modal__mute-btn svg { width: 18px; height: 18px; }
+
+/* Close */
+.modal__close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 100;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.14);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.modal__close:hover { background: rgba(180,0,0,0.55); border-color: transparent; }
+.modal__close svg {
+  width: 16px; height: 16px;
+  stroke: #fff; fill: none;
+  stroke-width: 2.2; stroke-linecap: round;
+}
+
+/* Info side */
+.modal__info-side {
+  width: 340px;
+  flex-shrink: 0;
+  background: #141414;
+  padding: 44px 32px 32px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid rgba(255,255,255,0.05);
+}
+.modal__info-side::-webkit-scrollbar { width: 3px; }
+.modal__info-side::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+.modal__brand {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+
+.modal__title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.modal__price {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 18px;
+}
+
+.modal__divider {
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+  margin-bottom: 18px;
+}
+
+.modal__desc {
+  font-size: 13px;
+  line-height: 1.8;
+  color: rgba(255,255,255,0.48);
+  margin-bottom: 24px;
+}
+
+.modal__sizes-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  margin-bottom: 10px;
+}
+
+.modal__sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.size-pill {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  transition: all 0.18s;
+  background: rgba(255,255,255,0.03);
+}
+.size-pill:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.size-pill.selected { border-color: var(--accent); color: #000; background: var(--accent); }
+
+.modal__cta-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--accent);
+  color: #000;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 17px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s, transform 0.2s;
+  margin-bottom: 22px;
+  margin-top: auto;
+}
+.modal__cta-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+.modal__hashtags {
+  font-size: 11px;
+  color: rgba(255,255,255,0.2);
+  line-height: 2;
+  margin-bottom: 14px;
+  word-break: break-word;
+}
+
+.modal__ig-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.35);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.modal__ig-link:hover { color: var(--accent); }
+
+/* ========================================================
+   ADMIN — FAB
+   ======================================================== */
+#admin-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 8000;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #1a1a2e;
+  border: 1px solid rgba(255,255,255,0.14);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+  transition: all 0.22s;
+  outline: none;
+}
+#admin-fab:hover { background: var(--accent); color: #000; transform: scale(1.1); }
+#admin-fab svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ========================================================
+   ADMIN — FULL PANEL
+   ======================================================== */
+#admin-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 8500;
+  background: #f4f5f7;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.22,1,0.36,1);
+  overflow-y: auto;
+  font-family: 'Inter', -apple-system, sans-serif;
+  color: #111;
+}
+#admin-panel.open { transform: translateX(0); }
+
+/* Header */
+.adm-hdr {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.adm-hdr__left h1 {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #111;
+}
+.adm-hdr__left p { font-size: 11px; color: #999; margin-top: 2px; }
+
+.adm-hdr__right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+/* Buttons */
+.abtn {
+  padding: 9px 18px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+.abtn-primary   { background: #111; color: #fff; }
+.abtn-primary:hover  { background: #333; }
+.abtn-cyan      { background: #0ea5c9; color: #fff; }
+.abtn-cyan:hover { background: #0284a5; }
+.abtn-ghost     { background: transparent; color: #666; border: 1px solid #ddd; }
+.abtn-ghost:hover { background: #f3f4f6; }
+.abtn-danger    { background: #fee2e2; color: #dc2626; }
+.abtn-danger:hover { background: #fecaca; }
+.abtn-close     { background: #f0f0f0; color: #333; border: 1px solid #e0e0e0; font-size: 20px; padding: 4px 14px; line-height: 1; }
+.abtn-close:hover { background: #e0e0e0; }
+.abtn-sm        { padding: 6px 12px; font-size: 11px; }
+
+.save-toast {
+  display: none;
+  font-size: 12px;
+  color: #16a34a;
+  font-weight: 700;
+  padding: 8px 14px;
+  background: #f0fdf4;
+  border-radius: 8px;
+  border: 1px solid #bbf7d0;
+}
+.save-toast.show { display: block; }
+
+/* Body */
+.adm-body {
+  padding: 28px 32px;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+/* Tabs */
+.adm-tabs {
+  display: flex;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 28px;
+  gap: 0;
+}
+.adm-tab {
+  padding: 12px 24px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #999;
+  cursor: pointer;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  background: none;
+  font-family: inherit;
+  transition: all 0.18s;
+}
+.adm-tab.active { color: #111; border-bottom-color: #111; }
+.adm-tab:hover:not(.active) { color: #444; background: #fafafa; }
+
+.adm-tab-pane { display: none; }
+.adm-tab-pane.active { display: block; }
+
+/* Cards */
+.adm-card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.adm-card-hdr {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.adm-card-hdr h2 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.adm-card-body { padding: 20px; }
+
+/* Form helpers */
+.frow { display: grid; gap: 16px; margin-bottom: 16px; }
+.frow-2 { grid-template-columns: 1fr 1fr; }
+.frow-3 { grid-template-columns: 1fr 1fr 1fr; }
+.frow-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.fg { display: flex; flex-direction: column; gap: 6px; }
+.fg label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #888;
+}
+.fg input, .fg textarea, .fg select {
+  padding: 10px 13px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  font-size: 13px;
+  color: #111;
+  background: #fff;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+.fg input:focus, .fg textarea:focus, .fg select:focus {
+  border-color: #0ea5c9;
+  box-shadow: 0 0 0 3px rgba(14,165,201,0.1);
+}
+.fg textarea { resize: vertical; min-height: 68px; }
+
+/* Video manager list */
+.vm-list { display: flex; flex-direction: column; gap: 10px; }
+
+.vm-item {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 13px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 28px 88px 1fr 130px;
+  gap: 14px;
+  align-items: start;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.vm-item:hover { box-shadow: 0 2px 14px rgba(0,0,0,0.07); }
+.vm-item.dragging { opacity: 0.45; border-style: dashed; }
+.vm-item.drag-over { border-color: #0ea5c9; box-shadow: 0 0 0 2px rgba(14,165,201,0.25); }
+
+.drag-handle {
+  cursor: grab;
+  color: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 6px;
+  user-select: none;
+  transition: color 0.18s;
+}
+.drag-handle:hover { color: #888; }
+.drag-handle:active { cursor: grabbing; }
+.drag-handle svg { width: 18px; height: 18px; }
+
+.vm-thumb {
+  width: 88px;
+  height: 88px;
+  border-radius: 10px;
+  background: #1a1a1a;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.vm-thumb video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+
+.vm-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.vm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.toggle-row { display: flex; align-items: center; gap: 8px; }
+.toggle-row span { font-size: 11px; color: #888; font-weight: 600; }
+
+/* Toggle switch */
+.ts { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+.ts input { opacity: 0; width: 0; height: 0; position: absolute; }
+.ts-track {
+  position: absolute; inset: 0;
+  background: #ddd; border-radius: 11px;
+  cursor: pointer; transition: background 0.2s;
+}
+.ts-track::before {
+  content: '';
+  position: absolute;
+  height: 16px; width: 16px;
+  left: 3px; top: 3px;
+  background: #fff; border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+}
+.ts input:checked + .ts-track { background: #0ea5c9; }
+.ts input:checked + .ts-track::before { transform: translateX(18px); }
+
+/* Inline delete confirm */
+.del-confirm {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.del-confirm.show { display: flex; }
+.del-confirm span { font-size: 11px; color: #dc2626; font-weight: 700; }
+
+/* Settings layout */
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+.color-row { display: flex; gap: 8px; align-items: center; }
+.color-row input[type="color"] {
+  width: 42px; height: 42px;
+  padding: 2px; border-radius: 9px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer; background: none;
+  flex-shrink: 0;
+}
+.color-row input[type="text"] { flex: 1; }
+
+.slider-row { display: flex; gap: 14px; align-items: center; }
+.slider-row input[type="range"] { flex: 1; accent-color: #0ea5c9; }
+.slider-val { font-size: 13px; font-weight: 700; color: #111; min-width: 48px; }
+
+/* Live preview wrapper */
+.preview-wrap {
+  background: #0d0d0d;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid #222;
+  margin-top: 20px;
+}
+.preview-label {
+  background: #1a1a1a;
+  border-bottom: 1px solid #2a2a2a;
+  color: #555;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 9px 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.preview-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+
+/* ========================================================
+   RESPONSIVE
+   ======================================================== */
+@media (max-width: 900px) {
+  .video-section__deco { display: none; }
+  .video-section__header { padding: 0 20px; }
+  .video-scroll-track { padding: 12px 20px 28px; gap: 12px; }
+  .vm-item { grid-template-columns: 28px 1fr 110px; }
+  .vm-thumb { display: none; }
+  .vm-fields { grid-template-columns: 1fr 1fr; }
+  .settings-grid { grid-template-columns: 1fr; }
+  .frow-2, .frow-3, .frow-4 { grid-template-columns: 1fr; }
+  .adm-body { padding: 16px; }
+  .adm-hdr { padding: 12px 16px; }
+}
+
+@media (max-width: 640px) {
+  .modal {
+    flex-direction: column;
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+  }
+  .modal__video-side { flex: 0 0 48%; }
+  .modal__info-side { width: 100%; flex: 1; padding: 20px 18px; }
+  .modal__title { font-size: 18px; }
+  .vm-fields { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ========================================================
+     FRONTEND — VIDEO REEL SECTION
+     ======================================================== -->
+<section class="video-section" id="video-section">
+  <div class="video-section__header">
+    <div class="video-section__deco" aria-hidden="true">01</div>
+    <div class="video-section__titles">
+      <div class="video-section__eyebrow">Editorial Drops</div>
+      <h2 class="video-section__title" id="fe-title">Style in Motion</h2>
+      <p class="video-section__subtitle" id="fe-subtitle">Tap any look to explore the full collection</p>
+    </div>
+  </div>
+  <div class="video-scroll-track" id="video-track"></div>
+</section>
+
+<!-- ========================================================
+     MODAL
+     ======================================================== -->
+<div class="modal-backdrop" id="modal-backdrop" role="dialog" aria-modal="true" aria-label="Product video">
+  <div class="modal" id="modal">
+
+    <!-- Close button -->
+    <button class="modal__close" id="modal-close" aria-label="Close modal">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+
+    <!-- Video -->
+    <div class="modal__video-side">
+      <video id="modal-video" playsinline loop></video>
+      <button class="modal__mute-btn" id="mute-btn" aria-label="Toggle mute"></button>
+    </div>
+
+    <!-- Info -->
+    <div class="modal__info-side">
+      <div class="modal__brand">INOUT Fashion</div>
+      <div class="modal__title"  id="mi-title"></div>
+      <div class="modal__price"  id="mi-price"></div>
+      <div class="modal__divider"></div>
+      <div class="modal__desc"   id="mi-desc"></div>
+      <div class="modal__sizes-label" id="mi-sizes-lbl" style="display:none">Select Size</div>
+      <div class="modal__sizes"  id="mi-sizes"></div>
+      <a   class="modal__cta-btn" id="mi-cta" href="#" target="_blank" rel="noopener noreferrer"></a>
+      <div class="modal__hashtags" id="mi-tags"></div>
+      <a class="modal__ig-link" id="mi-ig" href="#" target="_blank" rel="noopener noreferrer" style="display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="5"/>
+          <circle cx="12" cy="12" r="5"/>
+          <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/>
+        </svg>
+        View on Instagram
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     ADMIN FAB
+     ======================================================== -->
+<button id="admin-fab" title="Admin Panel (Ctrl+Shift+A)" aria-label="Open Admin Panel">
+  <svg viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+  </svg>
+</button>
+
+<!-- ========================================================
+     ADMIN PANEL
+     ======================================================== -->
+<div id="admin-panel" role="complementary" aria-label="Admin Panel">
+
+  <!-- Sticky header -->
+  <div class="adm-hdr">
+    <div class="adm-hdr__left">
+      <h1>🎬 Video Reel Manager</h1>
+      <p>INOUT Fashion · Shoppable Videos CMS — all changes reflect instantly</p>
+    </div>
+    <div class="adm-hdr__right">
+      <span class="save-toast" id="save-toast">✓ Saved</span>
+      <button class="abtn abtn-cyan" onclick="saveAll()">💾 Save</button>
+      <button class="abtn abtn-ghost" onclick="resetDefaults()">↺ Reset</button>
+      <button class="abtn abtn-close" onclick="closeAdmin()">×</button>
+    </div>
+  </div>
+
+  <div class="adm-body">
+
+    <!-- Tabs nav -->
+    <div class="adm-tabs">
+      <button class="adm-tab active" data-tab="videos"   onclick="switchTab('videos')">📹 Videos</button>
+      <button class="adm-tab"        data-tab="add"      onclick="switchTab('add')">＋ Add New</button>
+      <button class="adm-tab"        data-tab="settings" onclick="switchTab('settings')">⚙ Section Settings</button>
+      <button class="adm-tab"        data-tab="preview"  onclick="switchTab('preview')">👁 Live Preview</button>
+    </div>
+
+    <!-- ── Tab: Videos ── -->
+    <div class="adm-tab-pane active" id="tab-videos">
+      <div class="adm-card">
+        <div class="adm-card-hdr">
+          <h2>📋 Video Cards <span style="font-size:11px;font-weight:400;color:#aaa;margin-left:6px">Drag rows to reorder</span></h2>
+          <span style="font-size:12px;color:#888;" id="vm-count"></span>
+        </div>
+        <div class="adm-card-body">
+          <div class="vm-list" id="vm-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tab: Add New ── -->
+    <div class="adm-tab-pane" id="tab-add">
+      <div class="adm-card">
+        <div class="adm-card-hdr"><h2>＋ Add New Video Card</h2></div>
+        <div class="adm-card-body">
+          <div class="frow frow-2">
+            <div class="fg">
+              <label>Video URL *</label>
+              <input type="url" id="n-videoUrl" placeholder="https://example.com/video.mp4">
+            </div>
+            <div class="fg">
+              <label>Thumbnail Image URL (optional)</label>
+              <input type="url" id="n-thumbUrl" placeholder="Leave blank — auto-captured from video">
+            </div>
+          </div>
+          <div class="frow frow-3">
+            <div class="fg">
+              <label>Label / Tag</label>
+              <input type="text" id="n-label" placeholder="NEW DROP">
+            </div>
+            <div class="fg">
+              <label>Product Title *</label>
+              <input type="text" id="n-title" placeholder="Baggy Denim Jeans">
+            </div>
+            <div class="fg">
+              <label>Price</label>
+              <input type="text" id="n-price" placeholder="₹799">
+            </div>
+          </div>
+          <div class="frow">
+            <div class="fg">
+              <label>Short Description</label>
+              <textarea id="n-desc" placeholder="Ultra-comfortable baggy fit. Made for the modern gentleman."></textarea>
+            </div>
+          </div>
+          <div class="frow frow-4">
+            <div class="fg">
+              <label>Sizes (comma-separated)</label>
+              <input type="text" id="n-sizes" placeholder="S,M,L,XL,XXL">
+            </div>
+            <div class="fg">
+              <label>CTA Button Text</label>
+              <input type="text" id="n-ctaText" placeholder="Shop Now →">
+            </div>
+            <div class="fg">
+              <label>CTA Link URL</label>
+              <input type="url" id="n-ctaLink" placeholder="https://yourstore.com/product">
+            </div>
+            <div class="fg">
+              <label>Instagram Link</label>
+              <input type="url" id="n-igLink" placeholder="https://instagram.com/p/xyz">
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+            <button class="abtn abtn-ghost" onclick="clearAddForm()">Clear</button>
+            <button class="abtn abtn-primary" onclick="addVideo()" style="padding:12px 32px;">＋ Add Video Card</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tab: Settings ── -->
+    <div class="adm-tab-pane" id="tab-settings">
+      <div class="adm-card">
+        <div class="adm-card-hdr"><h2>🔤 Section Text</h2></div>
+        <div class="adm-card-body">
+          <div class="frow frow-2">
+            <div class="fg">
+              <label>Section Title</label>
+              <input type="text" id="s-title" oninput="applySettings()">
+            </div>
+            <div class="fg">
+              <label>Section Subtitle</label>
+              <input type="text" id="s-subtitle" oninput="applySettings()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="adm-card">
+        <div class="adm-card-hdr"><h2>🎨 Colors</h2></div>
+        <div class="adm-card-body">
+          <div class="settings-grid">
+            <div class="fg">
+              <label>Accent Color</label>
+              <div class="color-row">
+                <input type="color" id="s-accent-picker" oninput="syncPicker('accent')">
+                <input type="text"  id="s-accent-text"   oninput="syncText('accent')" placeholder="#00d4ff" maxlength="7">
+              </div>
+            </div>
+            <div class="fg">
+              <label>Background Color</label>
+              <div class="color-row">
+                <input type="color" id="s-bg-picker" oninput="syncPicker('bg')">
+                <input type="text"  id="s-bg-text"   oninput="syncText('bg')" placeholder="#0d0d0d" maxlength="7">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="adm-card">
+        <div class="adm-card-hdr"><h2>📐 Layout</h2></div>
+        <div class="adm-card-body">
+          <div class="settings-grid">
+            <div class="fg">
+              <label>Card Width</label>
+              <div class="slider-row">
+                <input type="range" id="s-cardW" min="160" max="300" step="10" oninput="applySettings()">
+                <span class="slider-val" id="s-cardW-val">220px</span>
+              </div>
+            </div>
+            <div class="fg">
+              <label>Section Visibility</label>
+              <div class="toggle-row" style="margin-top:10px;">
+                <label class="ts">
+                  <input type="checkbox" id="s-visible" onchange="applySettings()" checked>
+                  <span class="ts-track"></span>
+                </label>
+                <span>Show on page</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tab: Preview ── -->
+    <div class="adm-tab-pane" id="tab-preview">
+      <div class="adm-card">
+        <div class="adm-card-hdr">
+          <h2>👁 Live Preview</h2>
+          <span style="font-size:12px;color:#888;">Scroll the track · changes are live</span>
+        </div>
+      </div>
+      <div class="preview-wrap">
+        <div class="preview-label">
+          <span class="preview-dot"></span>
+          LIVE FRONTEND PREVIEW
+        </div>
+        <!-- Clone of the video section rendered here -->
+        <div id="preview-inner"></div>
+      </div>
+    </div>
+
+  </div><!-- /adm-body -->
+</div><!-- /admin-panel -->
+
+<script>
+/* ============================================================
+   DEFAULT DATA
+   ============================================================ */
+const DEFAULT_VIDEOS = [
+  {
+    id: 1,
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    thumbUrl: "",
+    label: "BESTSELLER",
+    title: "Relaxed Fit Linen Shirt",
+    price: "₹1,299",
+    description: "Breathable, summer-ready linen. Oversized silhouette crafted for the modern gentleman who moves with intention.",
+    sizes: ["S","M","L","XL","XXL"],
+    ctaText: "Shop Now →",
+    ctaLink: "#",
+    igLink: "",
+    active: true
+  },
+  {
+    id: 2,
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+    thumbUrl: "",
+    label: "NEW DROP",
+    title: "Baggy Cargo Trousers",
+    price: "₹1,799",
+    description: "Multi-pocket cargo trousers with a premium street feel. Drop-crotch silhouette, muted tones.",
+    sizes: ["28","30","32","34","36"],
+    ctaText: "Shop Now →",
+    ctaLink: "#",
+    igLink: "",
+    active: true
+  },
+  {
+    id: 3,
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    thumbUrl: "",
+    label: "LIMITED",
+    title: "Oversized Graphic Hoodie",
+    price: "₹2,199",
+    description: "Drop-shoulder hoodie with bold graphic print. GSM 380 fleece lining. Sizes running out fast.",
+    sizes: ["S","M","L","XL"],
+    ctaText: "Grab Yours →",
+    ctaLink: "#",
+    igLink: "",
+    active: true
+  },
+  {
+    id: 4,
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+    thumbUrl: "",
+    label: "TRENDING",
+    title: "Premium Denim Jacket",
+    price: "₹2,499",
+    description: "Washed indigo denim jacket with distressed details. Vintage-inspired silhouette for streetwear looks.",
+    sizes: ["S","M","L","XL","XXL"],
+    ctaText: "Shop Now →",
+    ctaLink: "#",
+    igLink: "",
+    active: true
+  },
+  {
+    id: 5,
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
+    thumbUrl: "",
+    label: "COLLAB",
+    title: "Co-ord Set — Earth Tones",
+    price: "₹3,299",
+    description: "Complete earth-tone co-ord set: shirt + trousers. Exclusive in-house collab. Wear together or mix and match.",
+    sizes: ["S","M","L","XL"],
+    ctaText: "Shop the Set →",
+    ctaLink: "#",
+    igLink: "",
+    active: true
+  }
+];
+
+const DEFAULT_SETTINGS = {
+  title:    "Style in Motion",
+  subtitle: "Tap any look to explore the full collection",
+  accent:   "#00d4ff",
+  bg:       "#0d0d0d",
+  cardW:    220,
+  visible:  true
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let videos   = [];
+let settings = {};
+
+/* ============================================================
+   INIT
+   ============================================================ */
+(function init() {
+  try {
+    const raw = localStorage.getItem("inout_videoSection");
+    if (raw) {
+      const p = JSON.parse(raw);
+      videos   = p.videos   || deepClone(DEFAULT_VIDEOS);
+      settings = p.settings || { ...DEFAULT_SETTINGS };
+    } else {
+      videos   = deepClone(DEFAULT_VIDEOS);
+      settings = { ...DEFAULT_SETTINGS };
+    }
+  } catch (e) {
+    videos   = deepClone(DEFAULT_VIDEOS);
+    settings = { ...DEFAULT_SETTINGS };
+  }
+  applySettingsToDOM();
+  renderFrontend();
+  renderAdminList();
+  syncAdminSettingsForm();
+  updateVMCount();
+})();
+
+/* ============================================================
+   STORAGE
+   ============================================================ */
+function saveAll() {
+  try {
+    localStorage.setItem("inout_videoSection", JSON.stringify({ videos, settings }));
+    const t = document.getElementById("save-toast");
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2200);
+  } catch(e) { console.error("Storage save failed:", e); }
+}
+
+function resetDefaults() {
+  if (!confirm("Reset all videos and settings to defaults? This cannot be undone.")) return;
+  localStorage.removeItem("inout_videoSection");
+  videos   = deepClone(DEFAULT_VIDEOS);
+  settings = { ...DEFAULT_SETTINGS };
+  applySettingsToDOM();
+  renderFrontend();
+  renderAdminList();
+  syncAdminSettingsForm();
+  updateVMCount();
+}
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+function applySettings() {
+  settings.title   = document.getElementById("s-title").value;
+  settings.subtitle= document.getElementById("s-subtitle").value;
+  settings.accent  = document.getElementById("s-accent-text").value || "#00d4ff";
+  settings.bg      = document.getElementById("s-bg-text").value || "#0d0d0d";
+  settings.cardW   = parseInt(document.getElementById("s-cardW").value, 10);
+  settings.visible = document.getElementById("s-visible").checked;
+  document.getElementById("s-cardW-val").textContent = settings.cardW + "px";
+  applySettingsToDOM();
+}
+
+function applySettingsToDOM() {
+  const r = document.documentElement;
+  r.style.setProperty("--accent",      settings.accent);
+  r.style.setProperty("--accent-dim",  hexAlpha(settings.accent, 0.13));
+  r.style.setProperty("--accent-glow", `0 0 22px ${hexAlpha(settings.accent,0.45)}, 0 0 50px ${hexAlpha(settings.accent,0.18)}`);
+  r.style.setProperty("--bg",          settings.bg);
+  r.style.setProperty("--card-w",      settings.cardW + "px");
+
+  const sec = document.getElementById("video-section");
+  if (sec) sec.style.display = settings.visible ? "" : "none";
+
+  const feTitle = document.getElementById("fe-title");
+  const feSub   = document.getElementById("fe-subtitle");
+  if (feTitle) feTitle.textContent = settings.title;
+  if (feSub)   feSub.textContent   = settings.subtitle;
+}
+
+function syncAdminSettingsForm() {
+  document.getElementById("s-title").value    = settings.title;
+  document.getElementById("s-subtitle").value = settings.subtitle;
+  document.getElementById("s-accent-text").value  = settings.accent;
+  document.getElementById("s-accent-picker").value = settings.accent;
+  document.getElementById("s-bg-text").value  = settings.bg;
+  document.getElementById("s-bg-picker").value = settings.bg;
+  document.getElementById("s-cardW").value    = settings.cardW;
+  document.getElementById("s-cardW-val").textContent = settings.cardW + "px";
+  document.getElementById("s-visible").checked = settings.visible;
+}
+
+function syncPicker(type) {
+  // color picker → text input
+  const v = document.getElementById("s-" + type + "-picker").value;
+  document.getElementById("s-" + type + "-text").value = v;
+  applySettings();
+}
+function syncText(type) {
+  // text input → color picker (only when valid hex)
+  const v = document.getElementById("s-" + type + "-text").value;
+  if (/^#[0-9a-fA-F]{6}$/.test(v))
+    document.getElementById("s-" + type + "-picker").value = v;
+  applySettings();
+}
+
+/* ============================================================
+   FRONTEND RENDER
+   ============================================================ */
+function renderFrontend(targetEl) {
+  const track = targetEl || document.getElementById("video-track");
+  if (!track) return;
+  track.innerHTML = "";
+
+  const active = videos.filter(v => v.active);
+  active.forEach(v => track.appendChild(buildCard(v)));
+  initDragScroll(track);
+}
+
+function buildCard(v) {
+  const card = document.createElement("div");
+  card.className = "video-card";
+  card.dataset.id = v.id;
+
+  // Shimmer overlay
+  const shimmer = document.createElement("div");
+  shimmer.className = "video-card__shimmer";
+  card.appendChild(shimmer);
+
+  // Video
+  const vid = document.createElement("video");
+  vid.src = v.videoUrl;
+  vid.muted = true;
+  vid.autoplay = true;
+  vid.loop = true;
+  vid.setAttribute("playsinline", "");
+  vid.addEventListener("loadeddata", () => card.classList.add("loaded"));
+  card.appendChild(vid);
+
+  // Overlay gradient
+  const ov = document.createElement("div");
+  ov.className = "video-card__overlay";
+  card.appendChild(ov);
+
+  // Label tag
+  if (v.label) {
+    const lbl = document.createElement("div");
+    lbl.className = "video-card__label";
+    lbl.textContent = v.label;
+    card.appendChild(lbl);
+  }
+
+  // Play hint (hover)
+  const playWrap = document.createElement("div");
+  playWrap.className = "video-card__play";
+  playWrap.innerHTML = `<div class="play-circle"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>`;
+  card.appendChild(playWrap);
+
+  // Bottom info
+  const bot = document.createElement("div");
+  bot.className = "video-card__bottom";
+
+  const title = document.createElement("div");
+  title.className = "video-card__title";
+  title.textContent = v.title;
+  bot.appendChild(title);
+
+  if (v.price) {
+    const price = document.createElement("div");
+    price.className = "video-card__price";
+    price.textContent = v.price;
+    bot.appendChild(price);
+  }
+
+  const cta = document.createElement("div");
+  cta.className = "video-card__cta";
+  cta.textContent = v.ctaText || "Shop Now →";
+  bot.appendChild(cta);
+
+  card.appendChild(bot);
+
+  // Click handler
+  card.addEventListener("click", () => openModal(v));
+
+  return card;
+}
+
+/* ============================================================
+   HORIZONTAL DRAG-SCROLL
+   ============================================================ */
+function initDragScroll(el) {
+  // Remove previous listeners by cloning (lightweight for small lists)
+  let isDown = false, startX, scrollLeft;
+  el.addEventListener("mousedown", e => {
+    // Don't hijack if click will open modal (let click fire too)
+    isDown = true;
+    el.classList.add("is-grabbing");
+    startX = e.pageX - el.offsetLeft;
+    scrollLeft = el.scrollLeft;
+  });
+  el.addEventListener("mouseleave", () => { isDown = false; el.classList.remove("is-grabbing"); });
+  el.addEventListener("mouseup",    () => { isDown = false; el.classList.remove("is-grabbing"); });
+  el.addEventListener("mousemove",  e => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x    = e.pageX - el.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    el.scrollLeft = scrollLeft - walk;
+  });
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+function openModal(v) {
+  const bd      = document.getElementById("modal-backdrop");
+  const modalVid= document.getElementById("modal-video");
+
+  // Populate
+  document.getElementById("mi-title").textContent = v.title;
+  document.getElementById("mi-price").textContent = v.price || "";
+  document.getElementById("mi-desc").textContent  = v.description || "";
+
+  // Sizes
+  const sizesEl  = document.getElementById("mi-sizes");
+  const sizesLbl = document.getElementById("mi-sizes-lbl");
+  sizesEl.innerHTML = "";
+  if (v.sizes && v.sizes.length) {
+    sizesLbl.style.display = "";
+    v.sizes.forEach(s => {
+      const pill = document.createElement("div");
+      pill.className = "size-pill";
+      pill.textContent = s;
+      pill.addEventListener("click", () => {
+        sizesEl.querySelectorAll(".size-pill").forEach(p => p.classList.remove("selected"));
+        pill.classList.add("selected");
+      });
+      sizesEl.appendChild(pill);
+    });
+  } else {
+    sizesLbl.style.display = "none";
+  }
+
+  // CTA
+  const ctaEl = document.getElementById("mi-cta");
+  ctaEl.textContent = v.ctaText || "Shop Now →";
+  ctaEl.href = v.ctaLink || "#";
+
+  // Hashtags
+  const tag = v.label ? `#${v.label.toLowerCase().replace(/\s+/g,"")}` : "";
+  document.getElementById("mi-tags").textContent =
+    [tag, "#inoutfashion", "#streetwear", "#mensfashion"].filter(Boolean).join("  ");
+
+  // Instagram
+  const igEl = document.getElementById("mi-ig");
+  if (v.igLink) { igEl.href = v.igLink; igEl.style.display = "inline-flex"; }
+  else          { igEl.style.display = "none"; }
+
+  // Video
+  modalVid.src   = v.videoUrl;
+  modalVid.muted = false;
+  modalVid.play().catch(() => {
+    // Autoplay with audio may be blocked; fallback to muted
+    modalVid.muted = true;
+    modalVid.play().catch(() => {});
+  });
+
+  setMuteIcon(modalVid.muted);
+  bd.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeModal() {
+  const bd  = document.getElementById("modal-backdrop");
+  const vid = document.getElementById("modal-video");
+  bd.classList.remove("open");
+  vid.pause();
+  vid.src = "";
+  document.body.style.overflow = "";
+}
+
+function setMuteIcon(muted) {
+  document.getElementById("mute-btn").innerHTML = muted
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="#fff" stroke="none"/>
+        <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+       </svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="#fff" stroke="none"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+       </svg>`;
+}
+
+document.getElementById("mute-btn").addEventListener("click", () => {
+  const v = document.getElementById("modal-video");
+  v.muted = !v.muted;
+  setMuteIcon(v.muted);
+});
+document.getElementById("modal-close").addEventListener("click", closeModal);
+document.getElementById("modal-backdrop").addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-backdrop")) closeModal();
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+/* ============================================================
+   ADMIN PANEL OPEN / CLOSE
+   ============================================================ */
+function openAdmin() {
+  document.getElementById("admin-panel").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeAdmin() {
+  document.getElementById("admin-panel").classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+document.getElementById("admin-fab").addEventListener("click", openAdmin);
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey && e.shiftKey && e.key === "A") {
+    e.preventDefault();
+    const p = document.getElementById("admin-panel");
+    p.classList.contains("open") ? closeAdmin() : openAdmin();
+  }
+});
+
+/* ============================================================
+   ADMIN TABS
+   ============================================================ */
+function switchTab(name) {
+  document.querySelectorAll(".adm-tab").forEach(t =>
+    t.classList.toggle("active", t.dataset.tab === name));
+  document.querySelectorAll(".adm-tab-pane").forEach(p =>
+    p.classList.toggle("active", p.id === "tab-" + name));
+
+  // Refresh preview when switching to it
+  if (name === "preview") buildPreview();
+}
+
+/* ============================================================
+   ADMIN — VIDEO LIST
+   ============================================================ */
+function renderAdminList() {
+  const list = document.getElementById("vm-list");
+  if (!list) return;
+  list.innerHTML = "";
+  videos.forEach((v, idx) => list.appendChild(buildVMItem(v, idx)));
+  updateVMCount();
+}
+
+function updateVMCount() {
+  const el = document.getElementById("vm-count");
+  if (el) el.textContent = `${videos.filter(v=>v.active).length} active / ${videos.length} total`;
+}
+
+function buildVMItem(v, idx) {
+  const item = document.createElement("div");
+  item.className = "vm-item";
+  item.dataset.idx = idx;
+  item.draggable = true;
+
+  item.innerHTML = `
+    <!-- Drag handle -->
+    <div class="drag-handle" title="Drag to reorder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="8" y1="6" x2="16" y2="6"/>
+        <line x1="8" y1="12" x2="16" y2="12"/>
+        <line x1="8" y1="18" x2="16" y2="18"/>
+      </svg>
+    </div>
+
+    <!-- Thumbnail -->
+    <div class="vm-thumb">
+      <video src="${escAttr(v.videoUrl)}" muted playsinline preload="metadata"></video>
+    </div>
+
+    <!-- Editable fields grid -->
+    <div class="vm-fields">
+      <div class="fg">
+        <label>Video URL</label>
+        <input type="url" value="${escAttr(v.videoUrl)}"
+          oninput="setField(${idx},'videoUrl',this.value)">
+      </div>
+      <div class="fg">
+        <label>Label / Tag</label>
+        <input type="text" value="${escAttr(v.label)}"
+          oninput="setField(${idx},'label',this.value)" placeholder="NEW DROP">
+      </div>
+      <div class="fg">
+        <label>Product Title</label>
+        <input type="text" value="${escAttr(v.title)}"
+          oninput="setField(${idx},'title',this.value)">
+      </div>
+      <div class="fg">
+        <label>Price</label>
+        <input type="text" value="${escAttr(v.price)}"
+          oninput="setField(${idx},'price',this.value)" placeholder="₹799">
+      </div>
+      <div class="fg">
+        <label>CTA Text</label>
+        <input type="text" value="${escAttr(v.ctaText)}"
+          oninput="setField(${idx},'ctaText',this.value)" placeholder="Shop Now →">
+      </div>
+      <div class="fg">
+        <label>CTA Link</label>
+        <input type="url" value="${escAttr(v.ctaLink)}"
+          oninput="setField(${idx},'ctaLink',this.value)" placeholder="https://...">
+      </div>
+      <div class="fg">
+        <label>Sizes (comma-sep)</label>
+        <input type="text" value="${(v.sizes||[]).join(',')}"
+          oninput="setSizes(${idx},this.value)" placeholder="S,M,L,XL">
+      </div>
+      <div class="fg">
+        <label>Description</label>
+        <input type="text" value="${escAttr(v.description)}"
+          oninput="setField(${idx},'description',this.value)">
+      </div>
+      <div class="fg">
+        <label>Instagram Link</label>
+        <input type="url" value="${escAttr(v.igLink)}"
+          oninput="setField(${idx},'igLink',this.value)" placeholder="https://instagram.com/p/...">
+      </div>
+    </div>
+
+    <!-- Actions column -->
+    <div class="vm-actions">
+      <div class="toggle-row">
+        <label class="ts">
+          <input type="checkbox" ${v.active ? 'checked' : ''}
+            onchange="setField(${idx},'active',this.checked)">
+          <span class="ts-track"></span>
+        </label>
+        <span>${v.active ? 'Active' : 'Hidden'}</span>
+      </div>
+
+      <button class="abtn abtn-danger abtn-sm" id="del-btn-${idx}"
+        onclick="showDelConfirm(${idx})">🗑 Delete</button>
+
+      <div class="del-confirm" id="del-confirm-${idx}">
+        <span>Sure?</span>
+        <button class="abtn abtn-danger abtn-sm" onclick="deleteVideo(${idx})">Yes</button>
+        <button class="abtn abtn-ghost abtn-sm" onclick="hideDelConfirm(${idx})">No</button>
+      </div>
+    </div>
+  `;
+
+  // Drag-and-drop
+  item.addEventListener("dragstart", dndStart);
+  item.addEventListener("dragover",  dndOver);
+  item.addEventListener("drop",      dndDrop);
+  item.addEventListener("dragend",   dndEnd);
+
+  return item;
+}
+
+/* ── Field updates ── */
+function setField(idx, field, value) {
+  videos[idx][field] = value;
+  renderFrontend();
+  updateVMCount();
+}
+function setSizes(idx, raw) {
+  videos[idx].sizes = raw.split(",").map(s=>s.trim()).filter(Boolean);
+  renderFrontend();
+}
+
+/* ── Delete ── */
+function showDelConfirm(idx) {
+  document.getElementById("del-confirm-" + idx).classList.add("show");
+  const btn = document.getElementById("del-btn-" + idx);
+  if (btn) btn.style.display = "none";
+}
+function hideDelConfirm(idx) {
+  document.getElementById("del-confirm-" + idx).classList.remove("show");
+  const btn = document.getElementById("del-btn-" + idx);
+  if (btn) btn.style.display = "";
+}
+function deleteVideo(idx) {
+  videos.splice(idx, 1);
+  renderFrontend();
+  renderAdminList();
+}
+
+/* ============================================================
+   ADMIN — ADD VIDEO
+   ============================================================ */
+function addVideo() {
+  const url   = document.getElementById("n-videoUrl").value.trim();
+  const title = document.getElementById("n-title").value.trim();
+  if (!url)   { flashError("n-videoUrl");  return; }
+  if (!title) { flashError("n-title"); return; }
+
+  const raw = document.getElementById("n-sizes").value.trim();
+  videos.push({
+    id:          Date.now(),
+    videoUrl:    url,
+    thumbUrl:    document.getElementById("n-thumbUrl").value.trim(),
+    label:       document.getElementById("n-label").value.trim(),
+    title,
+    price:       document.getElementById("n-price").value.trim(),
+    description: document.getElementById("n-desc").value.trim(),
+    sizes:       raw ? raw.split(",").map(s=>s.trim()).filter(Boolean) : [],
+    ctaText:     document.getElementById("n-ctaText").value.trim() || "Shop Now →",
+    ctaLink:     document.getElementById("n-ctaLink").value.trim(),
+    igLink:      document.getElementById("n-igLink").value.trim(),
+    active:      true
+  });
+  renderFrontend();
+  renderAdminList();
+  clearAddForm();
+  switchTab("videos");
+}
+
+function clearAddForm() {
+  ["n-videoUrl","n-thumbUrl","n-label","n-title","n-price",
+   "n-desc","n-sizes","n-ctaText","n-ctaLink","n-igLink"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+}
+
+function flashError(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.borderColor = "#dc2626";
+  el.style.boxShadow   = "0 0 0 3px rgba(220,38,38,0.15)";
+  el.focus();
+  setTimeout(() => { el.style.borderColor = ""; el.style.boxShadow = ""; }, 2200);
+}
+
+/* ============================================================
+   DRAG-AND-DROP REORDER (admin list)
+   ============================================================ */
+let dndSrc = null;
+
+function dndStart(e) {
+  dndSrc = parseInt(this.dataset.idx, 10);
+  this.classList.add("dragging");
+  e.dataTransfer.effectAllowed = "move";
+}
+function dndOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+  document.querySelectorAll(".vm-item").forEach(el => el.classList.remove("drag-over"));
+  this.classList.add("drag-over");
+}
+function dndDrop(e) {
+  e.preventDefault();
+  const dropIdx = parseInt(this.dataset.idx, 10);
+  if (dndSrc === null || dndSrc === dropIdx) return;
+  const [moved] = videos.splice(dndSrc, 1);
+  videos.splice(dropIdx, 0, moved);
+  renderFrontend();
+  renderAdminList();
+  dndSrc = null;
+}
+function dndEnd() {
+  document.querySelectorAll(".vm-item").forEach(el =>
+    el.classList.remove("dragging","drag-over"));
+  dndSrc = null;
+}
+
+/* ============================================================
+   LIVE PREVIEW
+   ============================================================ */
+function buildPreview() {
+  const wrap = document.getElementById("preview-inner");
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <div style="padding:52px 0 40px;background:var(--bg);">
+      <div style="padding:0 40px 36px;display:flex;align-items:flex-end;gap:20px;">
+        <div style="flex:1;">
+          <div style="font-size:10px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">
+            Editorial Drops
+          </div>
+          <div style="font-size:36px;font-weight:800;letter-spacing:-0.03em;line-height:1;color:#fff;">
+            ${escHTML(settings.title)}
+          </div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-top:12px;font-weight:300;">
+            ${escHTML(settings.subtitle)}
+          </div>
+        </div>
+      </div>
+      <div id="preview-track"
+        style="display:flex;gap:16px;padding:8px 40px 28px;overflow-x:auto;scrollbar-width:none;">
+      </div>
+    </div>
+  `;
+  renderFrontend(document.getElementById("preview-track"));
+}
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+function hexAlpha(hex, alpha) {
+  const h = hex.replace("#","");
+  const r = parseInt(h.slice(0,2),16);
+  const g = parseInt(h.slice(2,4),16);
+  const b = parseInt(h.slice(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function escAttr(s) {
+  if (!s) return "";
+  return String(s)
+    .replace(/&/g,"&amp;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#39;");
+}
+
+function escHTML(s) {
+  if (!s) return "";
+  return String(s)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
+}
+</script>
+</body>
+</html>
