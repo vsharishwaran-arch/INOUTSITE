@@ -174,17 +174,17 @@ export function Navigation() {
               </div>
 
               {/* ── Right: Icons ── */}
-              <div className="flex-shrink-0 flex items-center gap-1.5 sm:gap-4 lg:gap-5 ml-auto lg:ml-0">
+              <div className="flex-shrink-0 flex items-center gap-0.5 sm:gap-4 lg:gap-5 ml-auto lg:ml-0">
                 <Link
                   to="/search"
-                  className="text-[#333] hover:text-[#3498db] transition-colors"
+                  className="flex items-center justify-center w-10 h-10 text-[#333] hover:text-[#3498db] transition-colors"
                   aria-label="Search"
                 >
                   <Search size={19} strokeWidth={1.7} />
                 </Link>
                 <Link
                   to="/profile"
-                  className="text-[#333] hover:text-[#3498db] transition-colors"
+                  className="flex items-center justify-center w-10 h-10 text-[#333] hover:text-[#3498db] transition-colors"
                   aria-label="Profile"
                 >
                   <User size={19} strokeWidth={1.7} />
@@ -192,24 +192,28 @@ export function Navigation() {
                 {/* Wishlist */}
                 <Link
                   to="/profile"
-                  className="relative text-[#333] hover:text-[#3498db] transition-colors"
+                  className="relative flex items-center justify-center w-10 h-10 text-[#333] hover:text-[#3498db] transition-colors"
                   aria-label="Wishlist"
                 >
                   <Heart size={19} strokeWidth={1.7} />
-                  <span className="absolute -top-2 -right-2 text-[10px] w-[17px] h-[17px] rounded-full bg-[#111] text-white flex items-center justify-center font-semibold leading-none">
-                    {wishlistCount}
-                  </span>
+                  {wishlistCount > 0 && (
+                    <span className="absolute top-0.5 right-0.5 text-[10px] w-[16px] h-[16px] rounded-full bg-[#111] text-white flex items-center justify-center font-semibold leading-none">
+                      {wishlistCount}
+                    </span>
+                  )}
                 </Link>
                 {/* Cart */}
                 <Link
                   to="/cart"
-                  className="relative text-[#333] hover:text-[#3498db] transition-colors"
+                  className="relative flex items-center justify-center w-10 h-10 text-[#333] hover:text-[#3498db] transition-colors"
                   aria-label="Cart"
                 >
                   <ShoppingBag size={19} strokeWidth={1.7} />
-                  <span className="absolute -top-2 -right-2 text-[10px] w-[17px] h-[17px] rounded-full bg-[#111] text-white flex items-center justify-center font-semibold leading-none">
-                    {totalItems}
-                  </span>
+                  {totalItems > 0 && (
+                    <span className="absolute top-0.5 right-0.5 text-[10px] w-[16px] h-[16px] rounded-full bg-[#111] text-white flex items-center justify-center font-semibold leading-none">
+                      {totalItems}
+                    </span>
+                  )}
                 </Link>
               </div>
 

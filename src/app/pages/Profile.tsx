@@ -43,6 +43,7 @@ export function Profile() {
     setTimeout(() => setShowSuccessMessage(false), 3000);
   };
 
+  const hasGoogleAuth = !!(import.meta.env.VITE_GOOGLE_CLIENT_ID);
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       setGoogleLoading(true);
@@ -185,7 +186,7 @@ export function Profile() {
                   <button
                     type="button"
                     onClick={() => { setGoogleLoading(true); googleLogin(); }}
-                    disabled={googleLoading}
+                    disabled={googleLoading || !hasGoogleAuth}
                     className="flex items-center gap-2.5 border border-border bg-background px-4 py-2.5 text-sm hover:bg-muted/40 transition-colors disabled:opacity-60 shrink-0"
                   >
                     <svg viewBox="0 0 24 24" className="w-4 h-4" xmlns="http://www.w3.org/2000/svg">
