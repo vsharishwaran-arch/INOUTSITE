@@ -69,6 +69,57 @@ async function ensureSchema() {
   if (!productFields.has('tags')) {
     await pool.query("ALTER TABLE products ADD COLUMN tags VARCHAR(500) DEFAULT ''");
   }
+  if (!productFields.has('is_on_offer')) {
+    await pool.query('ALTER TABLE products ADD COLUMN is_on_offer BOOLEAN NOT NULL DEFAULT FALSE');
+  }
+  if (!productFields.has('images_json')) {
+    await pool.query('ALTER TABLE products ADD COLUMN images_json LONGTEXT DEFAULT NULL');
+  }
+  if (!productFields.has('wash_care')) {
+    await pool.query("ALTER TABLE products ADD COLUMN wash_care TEXT DEFAULT NULL");
+  }
+  if (!productFields.has('sleeve')) {
+    await pool.query("ALTER TABLE products ADD COLUMN sleeve VARCHAR(100) DEFAULT NULL");
+  }
+  if (!productFields.has('pattern')) {
+    await pool.query("ALTER TABLE products ADD COLUMN pattern VARCHAR(100) DEFAULT NULL");
+  }
+  if (!productFields.has('package_contents')) {
+    await pool.query("ALTER TABLE products ADD COLUMN package_contents TEXT DEFAULT NULL");
+  }
+  if (!productFields.has('net_quantity')) {
+    await pool.query('ALTER TABLE products ADD COLUMN net_quantity INT DEFAULT NULL');
+  }
+  if (!productFields.has('material')) {
+    await pool.query("ALTER TABLE products ADD COLUMN material VARCHAR(255) DEFAULT NULL");
+  }
+  if (!productFields.has('fit_type')) {
+    await pool.query("ALTER TABLE products ADD COLUMN fit_type VARCHAR(100) DEFAULT NULL");
+  }
+  if (!productFields.has('shipping_info')) {
+    await pool.query("ALTER TABLE products ADD COLUMN shipping_info TEXT DEFAULT NULL");
+  }
+  if (!productFields.has('return_policy')) {
+    await pool.query("ALTER TABLE products ADD COLUMN return_policy TEXT DEFAULT NULL");
+  }
+  if (!productFields.has('social_proof_count')) {
+    await pool.query('ALTER TABLE products ADD COLUMN social_proof_count INT DEFAULT 855');
+  }
+  if (!productFields.has('social_proof_24hrs')) {
+    await pool.query('ALTER TABLE products ADD COLUMN social_proof_24hrs INT DEFAULT 12');
+  }
+  if (!productFields.has('is_trending')) {
+    await pool.query('ALTER TABLE products ADD COLUMN is_trending BOOLEAN NOT NULL DEFAULT FALSE');
+  }
+  if (!productFields.has('stats_customers')) {
+    await pool.query('ALTER TABLE products ADD COLUMN stats_customers INT DEFAULT NULL');
+  }
+  if (!productFields.has('stats_orders')) {
+    await pool.query('ALTER TABLE products ADD COLUMN stats_orders INT DEFAULT NULL');
+  }
+  if (!productFields.has('stats_stores')) {
+    await pool.query('ALTER TABLE products ADD COLUMN stats_stores INT DEFAULT NULL');
+  }
   if (productFields.has('image')) {
     await pool.query("UPDATE products SET image_path = image WHERE (image_path IS NULL OR image_path = '') AND image IS NOT NULL");
   }
