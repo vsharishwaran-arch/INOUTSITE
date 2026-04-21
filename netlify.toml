@@ -2,7 +2,13 @@
   command = "npm run build"
   publish = "dist"
 
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; img-src 'self' data: https: blob:; media-src 'self' https: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://clothing-store-backend-51k7.onrender.com https://api.razorpay.com; frame-src https://api.razorpay.com;"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
