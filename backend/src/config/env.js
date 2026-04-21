@@ -12,6 +12,9 @@ const env = {
   razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET || '',
   fast2smsApiKey: process.env.FAST2SMS_API_KEY || '',
   smsProvider: process.env.SMS_PROVIDER || '',
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
+  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY || '',
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || '',
 };
 
 export default env;

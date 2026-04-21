@@ -71,12 +71,14 @@ export const updateSectionContent = asyncHandler(async (req, res) => {
 
 // ── POST /api/content/upload ──────────────────────────────────────────────
 // Accepts a single image file (field name: "image")
-// Returns { path: '/uploads/content/filename.ext' }
+// Returns { path: Cloudinary URL or '/uploads/content/filename.ext' }
 export const handleContentImageUpload = asyncHandler(async (req, res) => {
   if (!req.file) {
     throw new HttpError(400, 'No image file provided (field name must be "image")');
   }
-  const imagePath = `/uploads/content/${req.file.filename}`;
+  // Cloudinary: file has secure_url property
+  // Local storage: file has filename property
+  const imagePath = req.file.secure_url || `/uploads/content/${req.file.filename}`;
   res.status(201).json({ path: imagePath });
 });
 

@@ -27,3 +27,9 @@ services:
         value: fast2sms
       - key: FAST2SMS_API_KEY
         sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false        # Set this manually in Render dashboard → Environment
+      - key: CLOUDINARY_API_KEY
+        sync: false        # Set this manually in Render dashboard → Environment
+      - key: CLOUDINARY_API_SECRET
+        sync: false        # Set this manually in Render dashboard → Environment

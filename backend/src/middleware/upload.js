@@ -1,8 +1,25 @@
 import fs from 'fs';
 import path from 'path';
 import multer from 'multer';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import cloudinary from '../config/cloudinary.js';
+import env from '../config/env.js';
+
+// Use Cloudinary if configured, otherwise fall back to local storage
+const useCloudinary = env.cloudinaryCloudName && env.cloudinaryApiKey && env.cloudinaryApiSecret;
 
 function makeStorage(subfolder) {
+  if (useCloudinary) {
+    return new CloudinaryStorage({
+      cloudinary,
+      params: {
+        folder: `inout-fashion/${subfolder}`,
+        resource_type: 'auto',
+      },
+    });
+  }
+
+  // Fallback to local disk storage
   const dir = path.resolve(process.cwd(), 'uploads', subfolder);
   fs.mkdirSync(dir, { recursive: true });
   return multer.diskStorage({

@@ -72,7 +72,9 @@ export async function addImageToCarousel(req, res) {
 
   await enforceLimit();
 
-  const mediaUrl = `/uploads/carousel/${req.file.filename}`;
+  // Cloudinary: file has secure_url property
+  // Local storage: file has filename property
+  const mediaUrl = req.file.secure_url || `/uploads/carousel/${req.file.filename}`;
   const title = req.body.title || '';
   const subtitle = req.body.subtitle || '';
   const linkUrl = req.body.linkUrl || '';
@@ -92,7 +94,9 @@ export async function addVideoToCarousel(req, res) {
 
   await enforceLimit();
 
-  const mediaUrl = `/uploads/carousel/${req.file.filename}`;
+  // Cloudinary: file has secure_url property
+  // Local storage: file has filename property
+  const mediaUrl = req.file.secure_url || `/uploads/carousel/${req.file.filename}`;
   const title = req.body.title || '';
   const subtitle = req.body.subtitle || '';
   const linkUrl = req.body.linkUrl || '';

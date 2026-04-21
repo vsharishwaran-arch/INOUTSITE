@@ -5,8 +5,11 @@ import { promisify } from 'util';
 import { pool } from '../config/db.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { HttpError } from '../utils/httpError.js';
+import cloudinary from '../config/cloudinary.js';
+import env from '../config/env.js';
 
 const execFileAsync = promisify(execFile);
+const useCloudinary = env.cloudinaryCloudName && env.cloudinaryApiKey && env.cloudinaryApiSecret;
 
 function mapRow(row) {
   return {
@@ -120,15 +123,17 @@ export const incrementViews = asyncHandler(async (req, res) => {
 
 export const uploadVideoFile = asyncHandler(async (req, res) => {
   if (!req.file) throw new HttpError(400, 'No video file provided');
-  // Build accessible URL: backend serves /uploads/* statically
-  const url = `/uploads/videos/${req.file.filename}`;
+  // Cloudinary: file has secure_url property
+  // Local storage: file has filename property
+  const url = req.file.secure_url || `/uploads/videos/${req.file.filename}`;
   res.json({ url });
 });
 
 /**
  * POST /videos/download-instagram
  * Accepts { url } — an Instagram reel/post URL.
- * Uses yt-dlp to download the video locally, returns { url: '/uploads/videos/ig-xxx.mp4' }.
+ * Uses yt-dlp to download the video locally, then uploads to Cloudinary if configured.
+ * Returns { url: Cloudinary URL or '/uploads/videos/ig-xxx.mp4' }.
  */
 export const downloadInstagramVideo = asyncHandler(async (req, res) => {
   const { url } = req.body;
@@ -172,5 +177,24 @@ export const downloadInstagramVideo = asyncHandler(async (req, res) => {
     throw new HttpError(502, 'Download completed but video file was not found. Please upload the MP4 manually.');
   }
 
-  res.json({ url: `/uploads/videos/${filename}` });
+  try {
+    if (useCloudinary) {
+      // Upload to Cloudinary
+      const result = await cloudinary.uploader.upload(outputPath, {
+        resource_type: 'video',
+        folder: 'inout-fashion/videos',
+        quality: 'auto',
+      });
+      // Delete local file after uploading
+      fs.unlink(outputPath, () => {});
+      res.json({ url: result.secure_url });
+    } else {
+      // Fallback to local storage
+      res.json({ url: `/uploads/videos/${filename}` });
+    }
+  } catch (cloudinaryErr) {
+    // If Cloudinary upload fails, fall back to local
+    console.error('Cloudinary upload failed, using local storage:', cloudinaryErr.message);
+    res.json({ url: `/uploads/videos/${filename}` });
+  }
 });

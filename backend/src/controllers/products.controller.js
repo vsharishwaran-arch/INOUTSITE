@@ -6,6 +6,8 @@ import { HttpError } from '../utils/httpError.js';
 import { mapProductRows } from '../utils/productMapper.js';
 
 function removeUploadedImage(imagePath) {
+  // Only remove local files (for backward compatibility)
+  // Cloudinary URLs are handled automatically
   if (!imagePath || !imagePath.startsWith('/uploads/')) return;
   const fullPath = path.resolve(process.cwd(), imagePath.slice(1));
   fs.unlink(fullPath, () => {});
@@ -34,7 +36,9 @@ function parseSizeStock(rawValue) {
 
 function getNewImagePaths(req) {
   if (req.files && req.files.length > 0) {
-    return req.files.map(f => `/uploads/products/${f.filename}`);
+    // Cloudinary: files have secure_url property
+    // Local storage: files have filename property
+    return req.files.map(f => f.secure_url || `/uploads/products/${f.filename}`);
   }
   return [];
 }
