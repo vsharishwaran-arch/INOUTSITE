@@ -157,6 +157,11 @@ export function Profile() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [formData, setFormData] = useState(profileData);
 
+  const [orders, setOrders] = useState<MyOrderSummary[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState('');
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+
   // When user logs in, sync their server-side data into ProfileContext so the form is pre-populated.
   useEffect(() => {
     if (user) {
@@ -176,15 +181,6 @@ export function Profile() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]); // only re-sync when the logged-in user changes
 
-  // Show login/register gate when no user is authenticated
-  if (!user) return <AccountGate />;
-
-  // Orders state
-  const [orders, setOrders] = useState<MyOrderSummary[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState(false);
-  const [ordersError, setOrdersError] = useState('');
-  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
-
   // Auto-fetch orders when orders tab is opened and email is available
   useEffect(() => {
     if (activeTab === 'orders' && profileData.email) {
@@ -196,6 +192,9 @@ export function Profile() {
         .finally(() => setOrdersLoading(false));
     }
   }, [activeTab, profileData.email]);
+
+  // Show login/register gate when no user is authenticated
+  if (!user) return <AccountGate />;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
