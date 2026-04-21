@@ -65,8 +65,8 @@ export function HeroCarousel() {
 
   return (
     <section
-      className="relative bg-[#0f0f0f] overflow-hidden flex flex-col"
-      style={{ height: '100svh', minHeight: '500px', maxHeight: '900px' }}
+      className="relative bg-[#0f0f0f] overflow-hidden flex flex-col min-h-[620px] sm:min-h-[500px]"
+      style={{ height: '100svh', maxHeight: '900px' }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -79,7 +79,7 @@ export function HeroCarousel() {
         {/* ════════════════════════════════════
             MOBILE: image at TOP
             ════════════════════════════════════ */}
-        <div className="lg:hidden relative flex-shrink-0" style={{ height: '50svh', minHeight: '220px' }}>
+        <div className="lg:hidden relative flex-shrink-0" style={{ height: 'clamp(220px, 40svh, 340px)' }}>
           <AnimatePresence mode="sync">
             <motion.img
               key={`mob-img-${current}`}
@@ -174,7 +174,7 @@ export function HeroCarousel() {
                   initial={{ opacity: 0, x: -18 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.45, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-                  style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '30px' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: 'clamp(16px, 2vw, 30px)' }}
                 >
                   <div style={{ width: '26px', height: '1px', background: '#c0392b', flexShrink: 0 }} />
                   <span
@@ -196,11 +196,11 @@ export function HeroCarousel() {
                 <h1
                   style={{
                     fontFamily: 'Cormorant Garamond, Playfair Display, Georgia, serif',
-                    fontSize: 'clamp(36px, 5.5vw, 88px)',
+                    fontSize: 'clamp(26px, 5.2vw, 88px)',
                     lineHeight: 0.93,
                     letterSpacing: '-0.02em',
                     color: '#ffffff',
-                    margin: '0 0 20px 0',
+                    margin: '0 0 14px 0',
                   }}
                 >
                   {slide.title.map((line, i) => (
@@ -235,13 +235,13 @@ export function HeroCarousel() {
                   }}
                   style={{
                     fontFamily: 'Inter, DM Sans, sans-serif',
-                    fontSize: 'clamp(12px, 1.4vw, 14px)',
+                    fontSize: 'clamp(11px, 1.35vw, 14px)',
                     fontWeight: 300,
                     letterSpacing: '0.03em',
                     lineHeight: 1.78,
                     color: 'rgba(255,255,255,0.50)',
-                    maxWidth: '320px',
-                    marginBottom: 'clamp(20px, 3vw, 40px)',
+                    maxWidth: '420px',
+                    marginBottom: 'clamp(16px, 2.4vw, 32px)',
                   }}
                 >
                   {slide.description}
@@ -271,7 +271,7 @@ export function HeroCarousel() {
                       padding: 'clamp(12px, 1.5vw, 15px) clamp(20px, 3vw, 32px)',
                       textDecoration: 'none',
                       display: 'inline-flex',
-                      marginBottom: 'clamp(20px, 3vw, 36px)',
+                      marginBottom: 'clamp(14px, 2.2vw, 28px)',
                     }}
                   >
                     {slide.cta}

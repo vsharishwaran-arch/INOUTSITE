@@ -6,42 +6,7 @@ import { MobileMenu } from './MobileMenu';
 import { motion, AnimatePresence } from 'motion/react';
 import { useWishlist } from '../context/WishlistContext';
 import { useHomepageContent } from '../context/HomepageContentContext';
-
-type DropdownItem = { label: string; to: string; highlight?: boolean };
-type NavItem = { label: string; to: string; dropdown?: DropdownItem[] };
-
-const NAV_ITEMS: NavItem[] = [
-  { label: 'Home', to: '/' },
-  {
-    label: 'Top Wear',
-    to: '/topwear',
-    dropdown: [
-      { label: 'T-Shirts', to: '/tshirt' },
-      { label: 'Shirts', to: '/shirt' },
-      { label: 'Co-Ord Sets', to: '/coord' },
-      { label: 'Hoodies', to: '/hoodies', highlight: true },
-    ],
-  },
-  {
-    label: 'Bottom Wear',
-    to: '/bottomwear',
-    dropdown: [
-      { label: 'Jeans', to: '/jeans' },
-      { label: 'Trousers', to: '/trousers' },
-      { label: 'Shorts', to: '/shorts' },
-      { label: 'Track Pants', to: '/trackpants', highlight: true },
-    ],
-  },
-  {
-    label: 'Sale',
-    to: '/sale',
-    dropdown: [
-      { label: 'New Arrivals', to: '/new-arrivals' },
-      { label: 'Best Sellers', to: '/best-sellers' },
-      { label: 'Offer Zone', to: '/sale', highlight: true },
-    ],
-  },
-];
+import { NAV_ITEMS } from './navItems';
 
 export function Navigation() {
   const location = useLocation();
