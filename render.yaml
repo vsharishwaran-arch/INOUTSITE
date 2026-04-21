@@ -14,7 +14,7 @@ services:
       - key: JWT_SECRET
         sync: false        # Set this manually in Render dashboard → Environment
       - key: CLIENT_ORIGIN
-        value: https://inoutsite-three.vercel.app
+        value: https://inoutsite.netlify.app
       - key: PAYMENT_PROVIDER
         value: razorpay
       - key: PAYMENT_CURRENCY
