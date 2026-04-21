@@ -31,11 +31,23 @@ async function ensureSchema() {
   console.log('Schema applied successfully');
 }
 
+async function fixSequences() {
+  const tables = ['products', 'users', 'orders', 'order_items', 'carts', 'cart_items', 'coupons', 'reviews', 'carousel_items', 'shoppable_videos'];
+  for (const table of tables) {
+    const [rows] = await pool.query(`SELECT MAX(id) as max_id FROM ${table}`);
+    const max = rows[0]?.max_id;
+    if (max) {
+      await pool.query(`SELECT setval('${table}_id_seq', ${max})`);
+    }
+  }
+}
+
 async function start() {
   try {
     await pool.query('SELECT 1');
     console.log('Database connected successfully');
     await ensureSchema();
+    await fixSequences();
     app.listen(env.port, () => {
       console.log(`API server listening on http://localhost:${env.port}`);
     });
