@@ -157,6 +157,7 @@ async function ensureSchema() {
 async function start() {
   try {
     await pool.query('SELECT 1');
+    console.log('Database connected successfully');
     await ensureSchema();
     app.listen(env.port, () => {
       console.log(`API server listening on http://localhost:${env.port}`);
