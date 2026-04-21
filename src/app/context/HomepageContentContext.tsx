@@ -125,10 +125,15 @@ function parseRaw(raw: RawHomepageContent): HomepageContent {
     if (raw.hero?.slides) {
       const slides: HeroSlide[] = JSON.parse(raw.hero.slides);
       // Resolve image URLs (handles /uploads/... paths)
-      content.hero.slides = slides.map((s) => ({
-        ...s,
-        image: resolveAssetUrl(s.image),
-      }));
+      // Fall back to default slide image if the stored image is empty
+      content.hero.slides = slides.map((s, i) => {
+        const resolvedImage = resolveAssetUrl(s.image);
+        const fallbackImage = DEFAULT_CONTENT.hero.slides[i]?.image ?? DEFAULT_CONTENT.hero.slides[0].image;
+        return {
+          ...s,
+          image: resolvedImage || fallbackImage,
+        };
+      });
     }
   } catch { /* keep default */ }
 
