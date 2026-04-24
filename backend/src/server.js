@@ -34,10 +34,15 @@ async function ensureSchema() {
 async function fixSequences() {
   const tables = ['products', 'users', 'orders', 'order_items', 'carts', 'cart_items', 'coupons', 'reviews', 'carousel_items', 'shoppable_videos'];
   for (const table of tables) {
-    const [rows] = await pool.query(`SELECT MAX(id) as max_id FROM ${table}`);
-    const max = rows[0]?.max_id;
-    if (max) {
-      await pool.query(`SELECT setval('${table}_id_seq', ${max})`);
+    try {
+      const [rows] = await pool.query(`SELECT MAX(id) as max_id FROM ${table}`);
+      const max = rows[0]?.max_id;
+      if (max) {
+        await pool.query(`SELECT setval('${table}_id_seq', ${max})`);
+      }
+    } catch (err) {
+      // Silently skip if sequence fix fails (table might not have sequences)
+      console.log(`Skipping sequence fix for ${table}`);
     }
   }
 }
