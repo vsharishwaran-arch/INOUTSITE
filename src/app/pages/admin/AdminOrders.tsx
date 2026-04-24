@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchAllOrders, fetchOrderById, updateOrderStatus, updatePaymentStatus, bulkUpdateOrderStatus, type OrderSummary, type OrderDetail } from '../../lib/api';
-import { StatusBadge } from './AdminDashboard';
+import { StatusBadge } from '../../components/StatusBadge';
 import { X, ChevronDown, Loader2, Printer, CheckSquare, Square, IndianRupee } from 'lucide-react';
 
 const STATUS_OPTIONS = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];

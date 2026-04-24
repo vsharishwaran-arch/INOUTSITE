@@ -793,14 +793,6 @@ export async function adminUploadVideo(file: File): Promise<{ url: string }> {
   return res.json();
 }
 
-export async function adminDownloadInstagramVideo(instagramUrl: string): Promise<{ url: string }> {
-  return request<{ url: string }>('/videos/download-instagram', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify({ url: instagramUrl }),
-  });
-}
-
 export async function videoIncrementViews(id: number) {
   return request<{ ok: boolean }>(`/videos/${id}/view`, { method: 'POST' });
 }

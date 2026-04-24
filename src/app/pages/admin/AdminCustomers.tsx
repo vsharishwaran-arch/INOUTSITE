@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchCustomers, fetchCustomerOrders, type CustomerSummary } from '../../lib/api';
-import { StatusBadge } from './AdminDashboard';
+import { StatusBadge } from '../../components/StatusBadge';
 import { Users, Search, X, Loader2 } from 'lucide-react';
 
 export function AdminCustomers() {

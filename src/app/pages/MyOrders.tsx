@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { fetchMyOrders, type MyOrderSummary } from '../lib/api';
-import { StatusBadge } from './admin/AdminDashboard';
+import { StatusBadge } from '../components/StatusBadge';
 import { useProfile } from '../context/ProfileContext';
 import { Search, Package, ChevronDown, ChevronUp } from 'lucide-react';
 

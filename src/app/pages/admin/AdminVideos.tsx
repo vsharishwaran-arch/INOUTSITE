@@ -5,12 +5,15 @@ import {
   adminUpdateVideo,
   adminDeleteVideo,
   adminUploadVideo,
-  adminDownloadInstagramVideo,
   type ShoppableVideo,
 } from '../../lib/api';
 import { Plus, Pencil, Trash2, X, Loader2, Video, Upload } from 'lucide-react';
 
 const SIZES_OPTIONS = ['S', 'M', 'L', 'XL'] as const;
+
+function isUploadedVideoUrl(url: string) {
+  return url.startsWith('/uploads/videos/') || /res\.cloudinary\.com/i.test(url);
+}
 
 interface VideoForm {
   title: string;
@@ -129,29 +132,16 @@ export function AdminVideos() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!form.videoUrl.trim()) {
-      setError('Video URL is required. Enter a URL or upload a file.');
+      setError('Please upload a video file.');
       return;
     }
     setSubmitting(true);
     setError('');
     try {
-      /* Auto-download Instagram videos to play them natively on the site */
-      let finalVideoUrl = form.videoUrl.trim();
-      if (/instagram\.com/.test(finalVideoUrl)) {
-        try {
-          const { url } = await adminDownloadInstagramVideo(finalVideoUrl);
-          finalVideoUrl = url;
-        } catch (err: any) {
-          setError(err.message || 'Failed to download Instagram video. Try uploading the MP4 manually.');
-          setSubmitting(false);
-          return;
-        }
-      }
-
       const payload = {
         title: form.title,
         description: form.description,
-        videoUrl: finalVideoUrl,
+        videoUrl: form.videoUrl,
         thumbnailUrl: form.thumbnailUrl,
         overlayText: form.overlayText,
         price: form.price ? Number(form.price) : null,
@@ -241,31 +231,12 @@ export function AdminVideos() {
               />
             </div>
 
-            {/* Video URL + file upload */}
+            {/* Video upload (file only) */}
             <div className="md:col-span-2">
               <label className="block text-[12px] font-semibold tracking-wide text-gray-600 uppercase mb-1.5">
-                Video URL <span className="text-red-500">*</span>
+                Upload Video File <span className="text-red-500">*</span>
               </label>
-              <input
-                type="url"
-                value={form.videoUrl}
-                onChange={e => setForm(p => ({ ...p, videoUrl: e.target.value }))}
-                placeholder="https://www.youtube.com/watch?v=...  or  https://example.com/video.mp4"
-                className="w-full border border-gray-200 px-3 py-2.5 text-[14px] focus:outline-none focus:border-[#0A0A0A] transition-colors"
-              />
-              <div className="mt-2 flex flex-wrap gap-2">
-                <span className="text-[11px] bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 font-medium">✓ YouTube</span>
-                <span className="text-[11px] bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 font-medium">✓ Instagram Reel / Post (auto-downloaded)</span>
-                <span className="text-[11px] bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 font-medium">✓ Direct .mp4 / .webm URL</span>
-              </div>
-
-              {/* Upload divider */}
-              <div className="flex items-center gap-3 my-3">
-                <div className="flex-1 h-px bg-gray-200" />
-                <span className="text-[11px] text-gray-400 font-semibold">OR UPLOAD A VIDEO FILE</span>
-                <div className="flex-1 h-px bg-gray-200" />
-              </div>
-
+              
               <div className="flex items-center gap-3">
                 <input
                   ref={fileInputRef}
@@ -282,7 +253,7 @@ export function AdminVideos() {
                 >
                   {uploading
                     ? <><Loader2 size={13} className="animate-spin" /> Uploading…</>
-                    : <><Upload size={13} /> Upload MP4 / WebM</>}
+                    : <><Upload size={13} /> Choose Video File</>}
                 </button>
                 {uploading && (
                   <span className="text-[12px] text-gray-500">Please wait — uploading video…</span>
@@ -290,12 +261,12 @@ export function AdminVideos() {
                 {uploadErr && (
                   <span className="text-[12px] text-red-600 font-medium">{uploadErr}</span>
                 )}
-                {!uploading && form.videoUrl && form.videoUrl.startsWith('/uploads/videos/') && (
-                  <span className="text-[12px] text-green-700 font-semibold">✓ File uploaded successfully</span>
+                {!uploading && form.videoUrl && isUploadedVideoUrl(form.videoUrl) && (
+                  <span className="text-[12px] text-green-700 font-semibold">✓ Video uploaded</span>
                 )}
               </div>
               <p className="mt-2 text-[11px] text-gray-400">
-                Uploaded files always play directly in the website (no Instagram redirect). Max 200 MB.
+                Supported formats: MP4, WebM. Max 200 MB. Videos play directly on the website.
               </p>
             </div>
 

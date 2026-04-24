@@ -8,7 +8,6 @@ import {
   deleteVideo,
   incrementViews,
   uploadVideoFile,
-  downloadInstagramVideo,
 } from '../controllers/videos.controller.js';
 
 const router = Router();
@@ -29,7 +28,6 @@ router.post('/:id/view', incrementViews);
 // Admin only
 router.post('/', authenticate, requireAdmin, createVideo);
 router.post('/upload', authenticate, requireAdmin, uploadVideo.single('video'), uploadVideoFile);
-router.post('/download-instagram', authenticate, requireAdmin, downloadInstagramVideo);
 router.patch('/:id', authenticate, requireAdmin, updateVideo);
 router.delete('/:id', authenticate, requireAdmin, deleteVideo);
 

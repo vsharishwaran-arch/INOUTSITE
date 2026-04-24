@@ -1,15 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
 import { pool } from '../config/db.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { HttpError } from '../utils/httpError.js';
-import cloudinary from '../config/cloudinary.js';
-import env from '../config/env.js';
-
-const execFileAsync = promisify(execFile);
-const useCloudinary = env.cloudinaryCloudName && env.cloudinaryApiKey && env.cloudinaryApiSecret;
 
 function mapRow(row) {
   return {
@@ -31,6 +22,15 @@ function mapRow(row) {
   };
 }
 
+function isUploadedVideoUrl(videoUrl) {
+  if (typeof videoUrl !== 'string') return false;
+  const value = videoUrl.trim();
+  if (!value) return false;
+  if (value.startsWith('/uploads/videos/')) return true;
+  // Accept Cloudinary-hosted URLs produced by the upload endpoint.
+  return /^https?:\/\/res\.cloudinary\.com\/.+\/inout-fashion\/videos\//i.test(value);
+}
+
 export const listVideos = asyncHandler(async (req, res) => {
   const isAdmin = req.user?.role === 'admin';
   const whereClause = isAdmin ? '' : 'WHERE is_active = TRUE';
@@ -46,6 +46,9 @@ export const createVideo = asyncHandler(async (req, res) => {
   if (!title || !videoUrl) {
     throw new HttpError(400, 'title and videoUrl are required');
   }
+  if (!isUploadedVideoUrl(videoUrl)) {
+    throw new HttpError(400, 'videoUrl must be from uploaded video files only');
+  }
 
   const sizesStr = Array.isArray(sizes) ? sizes.join(',') : (sizes || 'S,M,L,XL');
 
@@ -56,7 +59,7 @@ export const createVideo = asyncHandler(async (req, res) => {
     [
       title,
       description || '',
-      videoUrl,
+      videoUrl.trim(),
       thumbnailUrl || '',
       overlayText || 'Comment "7"',
       price != null ? Number(price) : null,
@@ -83,7 +86,12 @@ export const updateVideo = asyncHandler(async (req, res) => {
 
   if (req.body.title !== undefined) set('title', req.body.title);
   if (req.body.description !== undefined) set('description', req.body.description);
-  if (req.body.videoUrl !== undefined) set('video_url', req.body.videoUrl);
+  if (req.body.videoUrl !== undefined) {
+    if (!isUploadedVideoUrl(req.body.videoUrl)) {
+      throw new HttpError(400, 'videoUrl must be from uploaded video files only');
+    }
+    set('video_url', req.body.videoUrl.trim());
+  }
   if (req.body.thumbnailUrl !== undefined) set('thumbnail_url', req.body.thumbnailUrl);
   if (req.body.overlayText !== undefined) set('overlay_text', req.body.overlayText);
   if (req.body.price !== undefined) set('price', req.body.price != null ? Number(req.body.price) : null);
@@ -127,74 +135,4 @@ export const uploadVideoFile = asyncHandler(async (req, res) => {
   // Local storage: file has filename property
   const url = req.file.secure_url || `/uploads/videos/${req.file.filename}`;
   res.json({ url });
-});
-
-/**
- * POST /videos/download-instagram
- * Accepts { url } — an Instagram reel/post URL.
- * Uses yt-dlp to download the video locally, then uploads to Cloudinary if configured.
- * Returns { url: Cloudinary URL or '/uploads/videos/ig-xxx.mp4' }.
- */
-export const downloadInstagramVideo = asyncHandler(async (req, res) => {
-  const { url } = req.body;
-  if (!url) throw new HttpError(400, 'url is required');
-
-  const match = url.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
-  if (!match) throw new HttpError(400, 'Invalid Instagram URL');
-
-  const shortcode = match[1];
-  const dir = path.resolve(process.cwd(), 'uploads', 'videos');
-  fs.mkdirSync(dir, { recursive: true });
-
-  const filename = `ig-${shortcode}-${Date.now()}.mp4`;
-  const outputPath = path.join(dir, filename);
-
-  try {
-    await execFileAsync('yt-dlp', [
-      '--no-warnings',
-      '--no-check-certificates',
-      '-f', 'mp4/best',
-      '--merge-output-format', 'mp4',
-      '-o', outputPath,
-      url,
-    ], { timeout: 120_000 });
-  } catch (err) {
-    // yt-dlp may exit with code 1 due to harmless stderr warnings (e.g. urllib3)
-    // even when the download itself succeeded — so check file first.
-    if (!fs.existsSync(outputPath)) {
-      const msg = err.stderr || err.message || '';
-      if (/private|login|restricted/i.test(msg)) {
-        throw new HttpError(422, 'This Instagram reel is private or restricted. Please download it manually and upload the MP4 file instead.');
-      }
-      if (/ENOENT/.test(msg) || /spawn/.test(msg)) {
-        throw new HttpError(502, 'Auto-download is not available on this server. Please download the reel manually and upload the MP4 file instead.');
-      }
-      throw new HttpError(502, `Failed to download Instagram video: ${msg.slice(0, 300)}`);
-    }
-  }
-
-  if (!fs.existsSync(outputPath)) {
-    throw new HttpError(502, 'Download completed but video file was not found. Please upload the MP4 manually.');
-  }
-
-  try {
-    if (useCloudinary) {
-      // Upload to Cloudinary
-      const result = await cloudinary.uploader.upload(outputPath, {
-        resource_type: 'video',
-        folder: 'inout-fashion/videos',
-        quality: 'auto',
-      });
-      // Delete local file after uploading
-      fs.unlink(outputPath, () => {});
-      res.json({ url: result.secure_url });
-    } else {
-      // Fallback to local storage
-      res.json({ url: `/uploads/videos/${filename}` });
-    }
-  } catch (cloudinaryErr) {
-    // If Cloudinary upload fails, fall back to local
-    console.error('Cloudinary upload failed, using local storage:', cloudinaryErr.message);
-    res.json({ url: `/uploads/videos/${filename}` });
-  }
 });
