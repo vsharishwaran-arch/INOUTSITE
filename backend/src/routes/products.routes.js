@@ -6,12 +6,25 @@ import { uploadProductImages } from '../middleware/upload.js';
 
 const router = Router();
 
+// Helper to wrap multer middleware with error handling
+function handleMulterError(multerMiddleware) {
+  return (req, res, next) => {
+    multerMiddleware(req, res, (err) => {
+      if (err) {
+        console.error('Multer error:', err);
+        return next(err);
+      }
+      next();
+    });
+  };
+}
+
 router.get('/', asyncHandler(listProducts));
 router.get('/carousel', asyncHandler(getCarouselProducts));
 router.get('/:id', asyncHandler(getProductById));
 
-router.post('/', authenticate, requireAdmin, uploadProductImages.array('images', 5), asyncHandler(createProduct));
-router.put('/:id', authenticate, requireAdmin, uploadProductImages.array('images', 5), asyncHandler(updateProduct));
+router.post('/', authenticate, requireAdmin, handleMulterError(uploadProductImages.array('images', 5)), asyncHandler(createProduct));
+router.put('/:id', authenticate, requireAdmin, handleMulterError(uploadProductImages.array('images', 5)), asyncHandler(updateProduct));
 router.delete('/:id', authenticate, requireAdmin, asyncHandler(deleteProduct));
 router.patch('/:id/carousel', authenticate, requireAdmin, asyncHandler(toggleCarousel));
 

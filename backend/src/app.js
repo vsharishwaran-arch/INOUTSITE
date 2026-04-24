@@ -38,6 +38,24 @@ if (env.nodeEnv !== 'production') {
 }
 
 app.use('/api', apiRoutes);
+
+// Multer error handler - must come after routes
+app.use((error, req, res, next) => {
+  if (error.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ message: 'File too large' });
+  }
+  if (error.code === 'LIMIT_PART_COUNT') {
+    return res.status(413).json({ message: 'Too many parts' });
+  }
+  if (error.code === 'LIMIT_FILE_COUNT') {
+    return res.status(413).json({ message: 'Too many files' });
+  }
+  if (error.message && error.message.includes('Only') && error.message.includes('uploads')) {
+    return res.status(400).json({ message: error.message });
+  }
+  next(error);
+});
+
 app.use(notFoundHandler);
 app.use(errorHandler);
 

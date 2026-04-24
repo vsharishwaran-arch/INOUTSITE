@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { pool } from '../config/db.js';
 import { verifyPaymentSignature } from '../services/payment.service.js';
 import { HttpError } from '../utils/httpError.js';
-import logger from '../utils/logger.js';
+import { logger } from '../utils/logger.js';
 
 const checkoutSchema = z.object({
   paymentMethod: z.enum(['upi', 'cod']),

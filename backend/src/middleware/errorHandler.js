@@ -1,6 +1,6 @@
 import { ZodError } from 'zod';
 import env from '../config/env.js';
-import logger from '../utils/logger.js';
+import { logger } from '../utils/logger.js';
 
 export function notFoundHandler(req, res) {
   res.status(404).json({

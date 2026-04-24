@@ -4,12 +4,14 @@ import multer from 'multer';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import cloudinary from '../config/cloudinary.js';
 import env from '../config/env.js';
+import { logger } from '../utils/logger.js';
 
 // Use Cloudinary if configured, otherwise fall back to local storage
 const useCloudinary = env.cloudinaryCloudName && env.cloudinaryApiKey && env.cloudinaryApiSecret;
 
 function makeStorage(subfolder) {
   if (useCloudinary) {
+    logger.info(`Using Cloudinary storage for ${subfolder}`);
     return new CloudinaryStorage({
       cloudinary,
       params: {
@@ -19,6 +21,7 @@ function makeStorage(subfolder) {
     });
   }
 
+  logger.info(`Using local disk storage for ${subfolder}`);
   // Fallback to local disk storage
   const dir = path.resolve(process.cwd(), 'uploads', subfolder);
   fs.mkdirSync(dir, { recursive: true });

@@ -5,7 +5,7 @@ import { pool } from '../config/db.js';
 import { HttpError } from '../utils/httpError.js';
 import { mapProductRows } from '../utils/productMapper.js';
 import { getCached, setCached, invalidateCache } from '../services/cache.service.js';
-import logger from '../utils/logger.js';
+import { logger } from '../utils/logger.js';
 
 function removeUploadedImage(imagePath) {
   // Only remove local files (for backward compatibility)
