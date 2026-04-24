@@ -26,8 +26,9 @@ router.get('/', (req, res, next) => {
 router.post('/:id/view', incrementViews);
 
 // Admin only
-router.post('/', authenticate, requireAdmin, createVideo);
+// NOTE: Specific routes (/upload) must come BEFORE generic routes (/) in Express
 router.post('/upload', authenticate, requireAdmin, uploadVideo.single('video'), uploadVideoFile);
+router.post('/', authenticate, requireAdmin, createVideo);
 router.patch('/:id', authenticate, requireAdmin, updateVideo);
 router.delete('/:id', authenticate, requireAdmin, deleteVideo);
 
