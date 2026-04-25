@@ -20,8 +20,10 @@ app.use(cors({
     if (origin === env.clientOrigin) return callback(null, true);
     // Allow any Vercel preview deployment for this project
     if (/https:\/\/inoutsite(-[a-z0-9]+)*-vsharishwaran-2571s-projects\.vercel\.app$/.test(origin)) return callback(null, true);
-    // Allow Netlify deploy previews
-    if (/https:\/\/[a-z0-9-]+--inoutsite\.netlify\.app$/.test(origin)) return callback(null, true);
+    // Allow Netlify deploy previews and production
+    if (/https:\/\/[a-z0-9-]+(--)?(inoutsite)?\.netlify\.app$/.test(origin)) return callback(null, true);
+    // Allow specific Netlify production domain
+    if (origin === 'https://vocal-buttercream-06059c.netlify.app') return callback(null, true);
     callback(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true,
