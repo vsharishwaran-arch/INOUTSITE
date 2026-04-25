@@ -6,6 +6,30 @@ import { HttpError } from '../utils/httpError.js';
 import { mapProductRows } from '../utils/productMapper.js';
 import { getCached, setCached, invalidateCache } from '../services/cache.service.js';
 import { logger } from '../utils/logger.js';
+import env from '../config/env.js';
+
+// Helper function to convert uploaded file to proper URL
+function getUploadedFileUrl(file, resourceType = 'image') {
+  if (!file) return null;
+  
+  // Cloudinary storage sets file.path as the public_id
+  if (file.path && !file.path.startsWith('/uploads')) {
+    // Build Cloudinary URL: https://res.cloudinary.com/{cloud_name}/image/upload/{public_id}
+    return `https://res.cloudinary.com/${env.cloudinaryCloudName}/${resourceType}/upload/${file.path}`;
+  }
+  
+  // Fallback for direct secure_url property (some versions of multer-storage-cloudinary)
+  if (file.secure_url) {
+    return file.secure_url;
+  }
+  
+  // Local storage fallback
+  if (file.filename) {
+    return `/uploads/products/${file.filename}`;
+  }
+  
+  return null;
+}
 
 function removeUploadedImage(imagePath) {
   // Only remove local files (for backward compatibility)
@@ -38,10 +62,8 @@ function parseSizeStock(rawValue) {
 
 function getNewImagePaths(req) {
   if (req.files && req.files.length > 0) {
-    // Cloudinary: files have secure_url property
-    // Local storage: files have filename property
     const paths = req.files.map(f => {
-      const url = f.secure_url || `/uploads/products/${f.filename}`;
+      const url = getUploadedFileUrl(f, 'image');
       if (!url) {
         throw new HttpError(500, 'Image upload failed - no URL returned from storage');
       }

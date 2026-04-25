@@ -1,6 +1,30 @@
 import { pool } from '../config/db.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { HttpError } from '../utils/httpError.js';
+import env from '../config/env.js';
+
+// Helper function to convert uploaded file to proper URL
+function getUploadedFileUrl(file, resourceType = 'video') {
+  if (!file) return null;
+  
+  // Cloudinary storage sets file.path as the public_id
+  if (file.path && !file.path.startsWith('/uploads')) {
+    // Build Cloudinary URL: https://res.cloudinary.com/{cloud_name}/video/upload/{public_id}
+    return `https://res.cloudinary.com/${env.cloudinaryCloudName}/${resourceType}/upload/${file.path}`;
+  }
+  
+  // Fallback for direct secure_url property
+  if (file.secure_url) {
+    return file.secure_url;
+  }
+  
+  // Local storage fallback
+  if (file.filename) {
+    return `/uploads/videos/${file.filename}`;
+  }
+  
+  return null;
+}
 
 function mapRow(row) {
   return {
@@ -131,8 +155,12 @@ export const incrementViews = asyncHandler(async (req, res) => {
 
 export const uploadVideoFile = asyncHandler(async (req, res) => {
   if (!req.file) throw new HttpError(400, 'No video file provided');
-  // Cloudinary: file has secure_url property
-  // Local storage: file has filename property
-  const url = req.file.secure_url || `/uploads/videos/${req.file.filename}`;
+  
+  const url = getUploadedFileUrl(req.file, 'video');
+  
+  if (!url) {
+    throw new HttpError(500, 'Video upload failed. Unable to generate URL.');
+  }
+  
   res.json({ url });
 });

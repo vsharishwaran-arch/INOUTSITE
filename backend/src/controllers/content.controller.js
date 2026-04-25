@@ -3,8 +3,32 @@ import fs from 'fs';
 import { pool } from '../config/db.js';
 import { HttpError } from '../utils/httpError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import env from '../config/env.js';
 
 const VALID_SECTIONS = ['hero', 'announcement', 'usp', 'offer', 'categories'];
+
+// Helper function to convert uploaded file to proper URL
+function getUploadedFileUrl(file, resourceType = 'image') {
+  if (!file) return null;
+  
+  // Cloudinary storage sets file.path as the public_id
+  if (file.path && !file.path.startsWith('/uploads')) {
+    // Build Cloudinary URL: https://res.cloudinary.com/{cloud_name}/image/upload/{public_id}
+    return `https://res.cloudinary.com/${env.cloudinaryCloudName}/${resourceType}/upload/${file.path}`;
+  }
+  
+  // Fallback for direct secure_url property
+  if (file.secure_url) {
+    return file.secure_url;
+  }
+  
+  // Local storage fallback
+  if (file.filename) {
+    return `/uploads/content/${file.filename}`;
+  }
+  
+  return null;
+}
 
 // ── GET /api/content ──────────────────────────────────────────────────────
 // Returns all sections as { section: { key: value } }
@@ -76,9 +100,10 @@ export const handleContentImageUpload = asyncHandler(async (req, res) => {
   if (!req.file) {
     throw new HttpError(400, 'No image file provided (field name must be "image")');
   }
-  // Cloudinary: file has secure_url property
-  // Local storage: file has filename property
-  const imagePath = req.file.secure_url || `/uploads/content/${req.file.filename}`;
+  const imagePath = getUploadedFileUrl(req.file, 'image');
+  if (!imagePath) {
+    throw new HttpError(500, 'Failed to generate image URL');
+  }
   res.status(201).json({ path: imagePath });
 });
 

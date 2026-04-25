@@ -2,6 +2,30 @@ import fs from 'fs';
 import path from 'path';
 import { pool } from '../config/db.js';
 import { HttpError } from '../utils/httpError.js';
+import env from '../config/env.js';
+
+// Helper function to convert uploaded file to proper URL
+function getUploadedFileUrl(file, resourceType = 'image') {
+  if (!file) return null;
+  
+  // Cloudinary storage sets file.path as the public_id
+  if (file.path && !file.path.startsWith('/uploads')) {
+    // Build Cloudinary URL: https://res.cloudinary.com/{cloud_name}/video/upload/{public_id}
+    return `https://res.cloudinary.com/${env.cloudinaryCloudName}/${resourceType}/upload/${file.path}`;
+  }
+  
+  // Fallback for direct secure_url property
+  if (file.secure_url) {
+    return file.secure_url;
+  }
+  
+  // Local storage fallback
+  if (file.filename) {
+    return `/uploads/carousel/${file.filename}`;
+  }
+  
+  return null;
+}
 
 function removeUploadedFile(filePath) {
   if (!filePath || !filePath.startsWith('/uploads/')) return;
@@ -72,9 +96,8 @@ export async function addImageToCarousel(req, res) {
 
   await enforceLimit();
 
-  // Cloudinary: file has secure_url property
-  // Local storage: file has filename property
-  const mediaUrl = req.file.secure_url || `/uploads/carousel/${req.file.filename}`;
+  const mediaUrl = getUploadedFileUrl(req.file, 'image');
+  if (!mediaUrl) throw new HttpError(500, 'Failed to generate image URL');
   const title = req.body.title || '';
   const subtitle = req.body.subtitle || '';
   const linkUrl = req.body.linkUrl || '';
@@ -94,9 +117,8 @@ export async function addVideoToCarousel(req, res) {
 
   await enforceLimit();
 
-  // Cloudinary: file has secure_url property
-  // Local storage: file has filename property
-  const mediaUrl = req.file.secure_url || `/uploads/carousel/${req.file.filename}`;
+  const mediaUrl = getUploadedFileUrl(req.file, 'video');
+  if (!mediaUrl) throw new HttpError(500, 'Failed to generate video URL');
   const title = req.body.title || '';
   const subtitle = req.body.subtitle || '';
   const linkUrl = req.body.linkUrl || '';
