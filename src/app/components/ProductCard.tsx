@@ -191,14 +191,17 @@ function ProductCardComponent({ product, dark }: ProductCardProps) {
 
   // Memoize optimized image URLs
   const optimizedPrimaryImage = useMemo(() => {
-    if (!product.image) {
-      console.warn(`ProductCard: No image for product ${product.id} (${product.name})`);
+    // Fallback chain: product.image > product.images?.[0] > placeholder
+    const primaryImageUrl = product.image || product.images?.[0];
+    
+    if (!primaryImageUrl) {
+      console.warn(`ProductCard: No image for product ${product.id} (${product.name}) | image="${product.image}" | images=${JSON.stringify(product.images)}`);
       return '/placeholder.png';
     }
-    const optimized = getOptimizedImageUrl(product.image, { width: 400 });
-    console.debug(`ProductCard: ${product.id} image optimized: ${product.image} -> ${optimized}`);
+    const optimized = getOptimizedImageUrl(primaryImageUrl, { width: 400 });
+    console.debug(`ProductCard: ${product.id} image optimized: ${primaryImageUrl} -> ${optimized}`);
     return optimized || '/placeholder.png';
-  }, [product.image, product.id]);
+  }, [product.image, product.images, product.id]);
   
   const optimizedHoverImage = useMemo(() => {
     if (!hoverImg) return null;

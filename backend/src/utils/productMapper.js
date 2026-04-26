@@ -29,17 +29,24 @@ export function mapProductRows(rows) {
       const images = parseJsonField(row.images_json);
       const primaryImage = row.image_path || '';
 
-      // FAILSAFE: Ensure images array is always valid
-      // If images_json parsing failed, use primaryImage as fallback
-      // If no images available, return empty array (frontend will handle gracefully)
+      // FAILSAFE: Ensure BOTH image and images fields are populated
+      // Priority: images_json (new) > image_path (old)
       let finalImages = [];
       if (images && Array.isArray(images) && images.length > 0) {
-        finalImages = images;
-      } else if (primaryImage) {
+        // Use images_json array
+        finalImages = images.filter(img => img && typeof img === 'string' && img.trim());
+      }
+      
+      if (finalImages.length === 0 && primaryImage) {
         // Fallback: use primary image if images_json is empty/invalid
         finalImages = [primaryImage];
       }
-      // else: finalImages remains empty array (safe)
+      
+      // Ensure image field is always set from either source
+      // Priority: finalImages[0] (from images_json) > primaryImage (image_path)
+      const finalImage = finalImages.length > 0 ? finalImages[0] : primaryImage || '';
+
+      console.log(`[PRODUCT_MAPPER] ID=${row.id} | image_path="${primaryImage}" | images_json=${JSON.stringify(images)} | final_image="${finalImage}" | final_images=${JSON.stringify(finalImages)}`);
 
       productMap.set(row.id, {
         id: String(row.id),
@@ -50,7 +57,7 @@ export function mapProductRows(rows) {
         tags: row.tags ? row.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
         category: row.category,
         description: row.description,
-        image: primaryImage || (finalImages.length > 0 ? finalImages[0] : ''),
+        image: finalImage,
         images: finalImages,
         sizes: [],
         sizeStock: {},

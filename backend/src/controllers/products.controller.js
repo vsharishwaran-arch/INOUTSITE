@@ -182,6 +182,17 @@ export async function listProducts(req, res) {
   // Cache for 5 minutes
   setCached(cacheKey, products, 5 * 60 * 1000);
 
+  // DEBUG: Log first few products with image data
+  if (products.length > 0) {
+    const sample = products.slice(0, 3).map(p => ({
+      id: p.id,
+      name: p.name,
+      image: p.image ? `✓ (${p.image.substring(0, 50)}...)` : '✗ NULL',
+      images: p.images ? `✓ [${p.images.length} images]` : '✗ NULL',
+    }));
+    logger.info(`📦 listProducts: Returning ${products.length} products\n${JSON.stringify(sample, null, 2)}`);
+  }
+
   res.json({ items: products });
 }
 
@@ -206,6 +217,9 @@ export async function getProductById(req, res) {
 
   // Cache individual product for 10 minutes
   setCached(cacheKey, product, 10 * 60 * 1000);
+
+  // DEBUG: Log product image data
+  logger.info(`🔍 getProductById: ID=${product.id} | name="${product.name}" | image="${product.image ? '✓' : '✗'}" | images=[${product.images ? product.images.length : '✗'}] | image_val="${product.image ? product.image.substring(0, 60) : 'NULL'}"`);
 
   res.json(product);
 }

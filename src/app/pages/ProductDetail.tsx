@@ -5,7 +5,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useProductCatalog } from '../context/ProductCatalogContext';
 import { ProductCard } from '../components/ProductCard';
 import { fetchProductById } from '../lib/api';
-import { getOptimizedImageUrl } from '../lib/imageOptimization';
+import { getOptimizedImageUrl } from '../../lib/imageOptimization';
 import type { Product } from '../data/products';
 
 // ─── Inline SVG Icons ─────────────────────────────────────────────────────────
@@ -164,6 +164,13 @@ export function ProductDetail() {
   
   if (images.length === 0) {
     images.push('/placeholder.png');
+  }
+
+  // DEBUG: Log image fallback chain
+  if (!product.images || product.images.length === 0) {
+    console.warn(`ProductDetail: Using fallback image | product.id=${product.id} | product.image="${product.image}" | product.images=${JSON.stringify(product.images)}`);
+  } else {
+    console.info(`ProductDetail: Using product.images array | count=${images.length}`);
   }
   
   // Optimize images for display
