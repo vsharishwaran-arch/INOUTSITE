@@ -2,21 +2,43 @@ import { pool } from '../config/db.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { HttpError } from '../utils/httpError.js';
 import env from '../config/env.js';
+import { logger } from '../utils/logger.js';
 
 // Helper function to convert uploaded file to proper URL
 function getUploadedFileUrl(file, resourceType = 'video') {
   if (!file) return null;
   
-  // Cloudinary: secure_url is set directly
-  if (file.secure_url) {
-    return file.secure_url;
+  logger.info(`📹 Processing video file: ${JSON.stringify({
+    filename: file.filename,
+    secure_url: file.secure_url?.substring(0, 50),
+    url: file.url?.substring(0, 50),
+    public_id: file.public_id,
+    originalname: file.originalname,
+    allKeys: Object.keys(file).slice(0, 10)
+  })}`);
+  
+  // Try Cloudinary properties in order of preference
+  const possibleUrls = [
+    file.secure_url,           // Cloudinary secure HTTPS URL
+    file.url,                  // Cloudinary fallback URL
+    file.path,                 // Sometimes Cloudinary uses path
+    file.location,             // AWS S3 style
+  ].filter(Boolean);
+  
+  if (possibleUrls.length > 0) {
+    const selectedUrl = possibleUrls[0];
+    logger.info(`✅ Using Cloudinary video URL: ${selectedUrl}`);
+    return selectedUrl;
   }
   
   // Local storage fallback
   if (file.filename) {
-    return `/uploads/videos/${file.filename}`;
+    const localPath = `/uploads/videos/${file.filename}`;
+    logger.info(`✅ Using local video filename: ${localPath}`);
+    return localPath;
   }
   
+  logger.error(`❌ No valid video URL found in file object. File: ${JSON.stringify(file)}`);
   return null;
 }
 
@@ -148,13 +170,28 @@ export const incrementViews = asyncHandler(async (req, res) => {
 });
 
 export const uploadVideoFile = asyncHandler(async (req, res) => {
-  if (!req.file) throw new HttpError(400, 'No video file provided');
+  logger.info(`📹 Upload video file called`);
+  logger.info(`📹 req.file exists: ${req.file ? 'yes' : 'no'}`);
+  
+  if (!req.file) {
+    logger.error(`❌ No video file provided`);
+    throw new HttpError(400, 'No video file provided');
+  }
+  
+  logger.info(`📹 Processing uploaded video file: ${JSON.stringify({
+    filename: req.file.filename,
+    secure_url: req.file.secure_url?.substring(0, 50),
+    url: req.file.url?.substring(0, 50),
+    mimetype: req.file.mimetype
+  })}`);
   
   const url = getUploadedFileUrl(req.file, 'video');
   
   if (!url) {
+    logger.error(`❌ Video upload failed - unable to generate URL from file object`);
     throw new HttpError(500, 'Video upload failed. Unable to generate URL.');
   }
   
+  logger.info(`✅ Successfully uploaded video: ${url}`);
   res.json({ url });
 });

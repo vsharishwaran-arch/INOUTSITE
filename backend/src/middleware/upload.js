@@ -51,7 +51,7 @@ function imageFilter(_req, file, callback) {
 }
 
 // Custom multer instance that enriches Cloudinary files with secure_url
-const buildMulter = (storage, filter, limits) => {
+const buildMulter = (storage, filter, limits, resourceType = 'image') => {
   const multerInstance = multer({ storage, fileFilter: filter, limits });
   
   // Wrap the multer instance to post-process files
@@ -66,12 +66,12 @@ const buildMulter = (storage, filter, limits) => {
             // If using Cloudinary and no secure_url, construct it
             if (useCloudinary && !file.secure_url && file.public_id) {
               const secure_url = cloudinary.url(file.public_id, {
-                resource_type: file.resource_type || 'image',
+                resource_type: file.resource_type || resourceType,
                 secure: true,
                 quality: 'auto',
                 fetch_format: 'auto'
               });
-              logger.info(`✅ Constructed Cloudinary URL: ${secure_url}`);
+              logger.info(`✅ Constructed Cloudinary URL for ${resourceType}: ${secure_url}`);
               return {
                 ...file,
                 secure_url,
@@ -87,8 +87,8 @@ const buildMulter = (storage, filter, limits) => {
   };
 };
 
-const buildUpload = (storage, filter, limits) => {
-  const builder = buildMulter(storage, filter, limits);
+const buildUpload = (storage, filter, limits, resourceType = 'image') => {
+  const builder = buildMulter(storage, filter, limits, resourceType);
   return {
     array: (fieldname, maxCount) => builder(fieldname, maxCount),
     single: (fieldname) => {
@@ -98,11 +98,12 @@ const buildUpload = (storage, filter, limits) => {
         middleware(req, res, () => {
           if (useCloudinary && req.file && !req.file.secure_url && req.file.public_id) {
             req.file.secure_url = cloudinary.url(req.file.public_id, {
-              resource_type: req.file.resource_type || 'image',
+              resource_type: req.file.resource_type || resourceType,
               secure: true,
               quality: 'auto',
               fetch_format: 'auto'
             });
+            logger.info(`✅ Constructed Cloudinary URL for ${resourceType}: ${req.file.secure_url}`);
           }
           next();
         });
@@ -111,11 +112,11 @@ const buildUpload = (storage, filter, limits) => {
   };
 };
 
-export const uploadProductImage = buildUpload(makeStorage('products', 'image'), imageFilter, { fileSize: 5 * 1024 * 1024 });
+export const uploadProductImage = buildUpload(makeStorage('products', 'image'), imageFilter, { fileSize: 5 * 1024 * 1024 }, 'image');
 
-export const uploadProductImages = buildUpload(makeStorage('products', 'image'), imageFilter, { fileSize: 5 * 1024 * 1024, files: 5 });
+export const uploadProductImages = buildUpload(makeStorage('products', 'image'), imageFilter, { fileSize: 5 * 1024 * 1024, files: 5 }, 'image');
 
-export const uploadContentImage = buildUpload(makeStorage('content', 'image'), imageFilter, { fileSize: 5 * 1024 * 1024 });
+export const uploadContentImage = buildUpload(makeStorage('content', 'image'), imageFilter, { fileSize: 5 * 1024 * 1024 }, 'image');
 
 function videoFilter(_req, file, callback) {
   if (!file.mimetype.startsWith('video/')) {
@@ -124,8 +125,8 @@ function videoFilter(_req, file, callback) {
   callback(null, true);
 }
 
-export const uploadVideo = buildUpload(makeStorage('videos', 'video'), videoFilter, { fileSize: 200 * 1024 * 1024 });
+export const uploadVideo = buildUpload(makeStorage('videos', 'video'), videoFilter, { fileSize: 200 * 1024 * 1024 }, 'video');
 
-export const uploadCarouselImage = buildUpload(makeStorage('carousel', 'image'), imageFilter, { fileSize: 5 * 1024 * 1024 });
+export const uploadCarouselImage = buildUpload(makeStorage('carousel', 'image'), imageFilter, { fileSize: 5 * 1024 * 1024 }, 'image');
 
-export const uploadCarouselVideo = buildUpload(makeStorage('carousel', 'video'), videoFilter, { fileSize: 200 * 1024 * 1024 });
+export const uploadCarouselVideo = buildUpload(makeStorage('carousel', 'video'), videoFilter, { fileSize: 200 * 1024 * 1024 }, 'video');

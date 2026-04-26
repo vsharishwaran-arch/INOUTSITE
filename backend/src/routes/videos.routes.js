@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
 import { uploadVideo } from '../middleware/upload.js';
+import { logger } from '../utils/logger.js';
 import {
   listVideos,
   createVideo,
@@ -12,14 +13,27 @@ import {
 
 const router = Router();
 
-// Helper to wrap multer middleware with error handling
+// Enhanced multer error handler with better logging for videos
 function handleMulterError(multerMiddleware) {
   return (req, res, next) => {
     multerMiddleware(req, res, (err) => {
       if (err) {
-        console.error('Multer error:', err);
-        return next(err);
+        logger.error(`🔴 Multer video error: ${err.message}`);
+        logger.error(`🔴 Error code: ${err.code}`);
+        
+        // Add file info to request even if multer fails
+        if (!req.file) req.file = null;
+        
+        // Handle specific multer errors
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ error: 'Video file too large (max 200MB)' });
+        }
+        
+        // For MIME type or other errors, continue
+        logger.warn(`⚠️ Multer error but continuing: ${err.message}`);
       }
+      
+      logger.info(`📹 Multer completed. req.file: ${req.file ? 'exists' : 'missing'}`);
       next();
     });
   };
