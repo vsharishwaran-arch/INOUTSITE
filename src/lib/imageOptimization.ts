@@ -29,26 +29,26 @@ export function getOptimizedImageUrl(url, options = {}) {
     // Build transformation string
     const transformation = `w_${width},q_${quality},f_${format},c_${crop},g_${gravity}`;
     
-    // Handle URLs with /v{version}/ (older format)
-    const cloudinaryMatchWithVersion = url.match(/(.*\/v\d+\/)(.*)/);
-    if (cloudinaryMatchWithVersion) {
-      const baseUrl = cloudinaryMatchWithVersion[1];
-      const restOfUrl = cloudinaryMatchWithVersion[2];
-      return `${baseUrl}${transformation}/${restOfUrl}`;
-    }
+    // Cloudinary URL format: https://res.cloudinary.com/{cloud}/image/upload/{transformations}/{public_id}
+    // We need to insert transformations after /upload/ but before the public_id
+    // Handle URLs like: https://res.cloudinary.com/divgqy8pk/image/upload/v1777202996/inout-fashion/products/piiebwowqjcp77j7o2ui.jpg
     
-    // Handle standard format: https://res.cloudinary.com/{cloud_name}/image/upload/{public_id}
-    // or: https://res.cloudinary.com/{cloud_name}/video/upload/{public_id}
-    const cloudinaryMatch = url.match(/(.*\/upload\/)(.+)$/);
-    if (cloudinaryMatch) {
-      const baseUrl = cloudinaryMatch[1];
-      const publicId = cloudinaryMatch[2];
-      return `${baseUrl}${transformation}/${publicId}`;
+    const uploadMatch = url.match(/(.*\/upload\/)(.*)/);
+    if (uploadMatch) {
+      const baseUrl = uploadMatch[1]; // Everything up to and including /upload/
+      const afterUpload = uploadMatch[2]; // Everything after /upload/
+      
+      // Insert transformation right after /upload/
+      const optimized = `${baseUrl}${transformation}/${afterUpload}`;
+      console.debug(`[ImageOptimization] Optimized: ${optimized}`);
+      return optimized;
     }
 
     // Fallback: return original URL if pattern doesn't match
+    console.warn(`[ImageOptimization] URL doesn't match Cloudinary pattern: ${url}`);
     return url;
   } catch (error) {
+    console.error(`[ImageOptimization] Error: ${error.message}`);
     // Return original URL if optimization fails
     return url;
   }
