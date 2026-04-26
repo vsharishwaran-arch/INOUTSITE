@@ -94,8 +94,9 @@ export function AdminReviews() {
       if (filter === 'approved') params.approved = 'true';
       const res = await fetchReviews(params);
       setReviews(res.items);
-    } catch {
-      setError('Failed to load reviews');
+    } catch (err) {
+      console.error('Failed to load reviews:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load reviews');
     } finally {
       setLoading(false);
     }

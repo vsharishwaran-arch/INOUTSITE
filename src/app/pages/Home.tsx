@@ -28,9 +28,17 @@ export function Home() {
 
   const [activeTab, setActiveTab] = useState<'all' | 'top' | 'bottom'>('all');
   const [carouselItems, setCarouselItems] = useState<CarouselItem[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     fetchCarouselItems().then(setCarouselItems).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   // Static meta (name, type, path) merged with admin-editable image/count from context
@@ -162,7 +170,9 @@ export function Home() {
                 {carouselItems.slice(0, 6).map((ci, i) => {
                   const count = Math.min(carouselItems.length, 6);
                   const angle = 360 / count;
-                  const radius = { 1: 0, 2: 120, 3: 140, 4: 160, 5: 180, 6: 200 }[count] ?? 180;
+                  const desktopRadius = { 1: 0, 2: 120, 3: 140, 4: 160, 5: 180, 6: 200 }[count] ?? 180;
+                  const mobileRadius = { 1: 0, 2: 80, 3: 90, 4: 100, 5: 110, 6: 120 }[count] ?? 100;
+                  const radius = isMobile ? mobileRadius : desktopRadius;
                   const duration = 25;
                   const wrapper = ci.linkUrl
                     ? (children: React.ReactNode) => <Link to={ci.linkUrl}>{children}</Link>

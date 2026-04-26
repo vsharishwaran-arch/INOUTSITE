@@ -144,6 +144,26 @@ export function ProductDetail() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  // Compute images array (must be before early returns for hooks)
+  const images = useMemo(() => {
+    if (!product) return ['/placeholder.png'];
+    const imgs = (product.images && product.images.length > 0)
+      ? product.images.filter(img => img && img.trim())
+      : (product.image && product.image.trim() ? [product.image] : ['/placeholder.png']);
+    return imgs.length > 0 ? imgs : ['/placeholder.png'];
+  }, [product]);
+
+  // Optimize images for display (must be before early returns)
+  const optimizedImages = useMemo(() =>
+    images.map(img => getOptimizedImageUrl(img, { width: 600 })),
+    [images]
+  );
+
+  const optimizedThumbImages = useMemo(() =>
+    images.map(img => getOptimizedImageUrl(img, { width: 200 })),
+    [images]
+  );
+
   if (pdpLoading) return <PDPSkeleton />;
 
   if (pdpError || !product) {
@@ -158,31 +178,12 @@ export function ProductDetail() {
     );
   }
 
-  const images = (product.images && product.images.length > 0) 
-    ? product.images.filter(img => img && img.trim()) 
-    : (product.image && product.image.trim() ? [product.image] : ['/placeholder.png']);
-  
-  if (images.length === 0) {
-    images.push('/placeholder.png');
-  }
-
   // DEBUG: Log image fallback chain
   if (!product.images || product.images.length === 0) {
     console.warn(`ProductDetail: Using fallback image | product.id=${product.id} | product.image="${product.image}" | product.images=${JSON.stringify(product.images)}`);
   } else {
     console.info(`ProductDetail: Using product.images array | count=${images.length}`);
   }
-  
-  // Optimize images for display
-  const optimizedImages = useMemo(() => 
-    images.map(img => getOptimizedImageUrl(img, { width: 600 })), 
-    [images]
-  );
-  
-  const optimizedThumbImages = useMemo(() => 
-    images.map(img => getOptimizedImageUrl(img, { width: 200 })), 
-    [images]
-  );
   const discountPct = product.discountPrice ? Math.round(((product.price - product.discountPrice) / product.price) * 100) : null;
   const getSizeStock = (size: string) => product.sizeStock?.[size] ?? product.stock;
   const selectedSizeStock = selectedSize ? getSizeStock(selectedSize) : product.stock;
