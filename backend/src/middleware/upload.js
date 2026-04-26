@@ -21,6 +21,8 @@ function makeStorage(subfolder, resourceType = 'image') {
           overwrite: false,
         };
       },
+      // Custom handler to construct full secure URL
+      fileFilter: (req, file, cb) => cb(null, true),
     });
   }
 
@@ -48,23 +50,72 @@ function imageFilter(_req, file, callback) {
   callback(null, true);
 }
 
-export const uploadProductImage = multer({
-  storage: makeStorage('products', 'image'),
-  fileFilter: imageFilter,
-  limits: { fileSize: 5 * 1024 * 1024 },
-});
+// Custom multer instance that enriches Cloudinary files with secure_url
+const buildMulter = (storage, filter, limits) => {
+  const multerInstance = multer({ storage, fileFilter: filter, limits });
+  
+  // Wrap the multer instance to post-process files
+  return (fieldname, maxCount) => {
+    return (req, res, next) => {
+      const middleware = multerInstance.array(fieldname, maxCount);
+      
+      middleware(req, res, () => {
+        // Post-process files to add secure_url
+        if (req.files && Array.isArray(req.files)) {
+          req.files = req.files.map(file => {
+            // If using Cloudinary and no secure_url, construct it
+            if (useCloudinary && !file.secure_url && file.public_id) {
+              const secure_url = cloudinary.url(file.public_id, {
+                resource_type: file.resource_type || 'image',
+                secure: true,
+                quality: 'auto',
+                fetch_format: 'auto'
+              });
+              logger.info(`✅ Constructed Cloudinary URL: ${secure_url}`);
+              return {
+                ...file,
+                secure_url,
+                url: secure_url // Fallback
+              };
+            }
+            return file;
+          });
+        }
+        next();
+      });
+    };
+  };
+};
 
-export const uploadProductImages = multer({
-  storage: makeStorage('products', 'image'),
-  fileFilter: imageFilter,
-  limits: { fileSize: 5 * 1024 * 1024, files: 5 },
-});
+const buildUpload = (storage, filter, limits) => {
+  const builder = buildMulter(storage, filter, limits);
+  return {
+    array: (fieldname, maxCount) => builder(fieldname, maxCount),
+    single: (fieldname) => {
+      const multerInstance = multer({ storage, fileFilter: filter, limits });
+      return (req, res, next) => {
+        const middleware = multerInstance.single(fieldname);
+        middleware(req, res, () => {
+          if (useCloudinary && req.file && !req.file.secure_url && req.file.public_id) {
+            req.file.secure_url = cloudinary.url(req.file.public_id, {
+              resource_type: req.file.resource_type || 'image',
+              secure: true,
+              quality: 'auto',
+              fetch_format: 'auto'
+            });
+          }
+          next();
+        });
+      };
+    }
+  };
+};
 
-export const uploadContentImage = multer({
-  storage: makeStorage('content', 'image'),
-  fileFilter: imageFilter,
-  limits: { fileSize: 5 * 1024 * 1024 },
-});
+export const uploadProductImage = buildUpload(makeStorage('products', 'image'), imageFilter, { fileSize: 5 * 1024 * 1024 });
+
+export const uploadProductImages = buildUpload(makeStorage('products', 'image'), imageFilter, { fileSize: 5 * 1024 * 1024, files: 5 });
+
+export const uploadContentImage = buildUpload(makeStorage('content', 'image'), imageFilter, { fileSize: 5 * 1024 * 1024 });
 
 function videoFilter(_req, file, callback) {
   if (!file.mimetype.startsWith('video/')) {
@@ -73,20 +124,8 @@ function videoFilter(_req, file, callback) {
   callback(null, true);
 }
 
-export const uploadVideo = multer({
-  storage: makeStorage('videos', 'video'),
-  fileFilter: videoFilter,
-  limits: { fileSize: 200 * 1024 * 1024 }, // 200 MB
-});
+export const uploadVideo = buildUpload(makeStorage('videos', 'video'), videoFilter, { fileSize: 200 * 1024 * 1024 });
 
-export const uploadCarouselImage = multer({
-  storage: makeStorage('carousel', 'image'),
-  fileFilter: imageFilter,
-  limits: { fileSize: 5 * 1024 * 1024 },
-});
+export const uploadCarouselImage = buildUpload(makeStorage('carousel', 'image'), imageFilter, { fileSize: 5 * 1024 * 1024 });
 
-export const uploadCarouselVideo = multer({
-  storage: makeStorage('carousel', 'video'),
-  fileFilter: videoFilter,
-  limits: { fileSize: 200 * 1024 * 1024 },
-});
+export const uploadCarouselVideo = buildUpload(makeStorage('carousel', 'video'), videoFilter, { fileSize: 200 * 1024 * 1024 });

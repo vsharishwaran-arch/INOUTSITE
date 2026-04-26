@@ -12,34 +12,43 @@ import env from '../config/env.js';
 function getUploadedFileUrl(file, resourceType = 'image') {
   if (!file) return null;
   
-  logger.info(`📸 File object: ${JSON.stringify({
+  // Log all file properties for debugging
+  const debugInfo = {
     secure_url: file.secure_url,
     public_id: file.public_id,
     url: file.url,
     filename: file.filename,
     path: file.path,
-    keys: Object.keys(file).slice(0, 10)
-  })}`);
+    originalname: file.originalname,
+    mimetype: file.mimetype,
+    allKeys: Object.keys(file)
+  };
+  logger.info(`📸 File object keys: ${JSON.stringify(debugInfo)}`);
+  logger.debug(`📸 Full file object: ${JSON.stringify(file, null, 2)}`);
   
-  // Cloudinary v4: secure_url is set directly
-  if (file.secure_url) {
-    logger.info(`✅ Using secure_url: ${file.secure_url}`);
-    return file.secure_url;
-  }
+  // Try Cloudinary properties in order of preference
+  const possibleUrls = [
+    file.secure_url,           // Cloudinary secure HTTPS URL
+    file.url,                  // Cloudinary fallback URL
+    file.path,                 // Sometimes Cloudinary uses path
+    file.location,             // AWS S3 style
+    file.cloudinary_url,       // Alternative Cloudinary property
+  ].filter(Boolean);
   
-  // Fallback: try url property
-  if (file.url) {
-    logger.info(`✅ Using url: ${file.url}`);
-    return file.url;
+  if (possibleUrls.length > 0) {
+    const selectedUrl = possibleUrls[0];
+    logger.info(`✅ Using URL from Cloudinary: ${selectedUrl}`);
+    return selectedUrl;
   }
   
   // Local storage fallback
   if (file.filename) {
-    logger.info(`✅ Using local filename: /uploads/products/${file.filename}`);
-    return `/uploads/products/${file.filename}`;
+    const localPath = `/uploads/products/${file.filename}`;
+    logger.info(`✅ Using local filename: ${localPath}`);
+    return localPath;
   }
   
-  logger.error(`❌ No valid URL found in file object`);
+  logger.error(`❌ No valid URL found in file object. File: ${JSON.stringify(file)}`);
   return null;
 }
 
@@ -75,25 +84,67 @@ function parseSizeStock(rawValue) {
 function getNewImagePaths(req) {
   logger.info(`📤 getNewImagePaths called`);
   logger.info(`📤 req.files: ${req.files ? `${req.files.length} files` : 'undefined'}`);
+  logger.info(`📤 req.file: ${req.file ? 'exists' : 'undefined'}`);
   
-  if (req.files && req.files.length > 0) {
-    logger.info(`📤 Processing ${req.files.length} files`);
-    const paths = req.files.map((f, idx) => {
-      logger.info(`📤 Processing file ${idx}`);
+  // Log complete request state for debugging
+  logger.debug(`📤 Full req state: {
+    files: ${Array.isArray(req.files) ? req.files.length : typeof req.files},
+    file: ${req.file ? 'exists' : 'missing'},
+    filesize: ${req.file?.size || 'N/A'},
+    body keys: ${Object.keys(req.body).slice(0, 10).join(', ')}
+  }`);
+  
+  if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+    logger.warn(`⚠️ No files in req.files. Checking alternative properties...`);
+    
+    // Fallback: if single file upload
+    if (req.file) {
+      logger.info(`✅ Found single file in req.file: ${JSON.stringify({
+        filename: req.file.filename,
+        secure_url: req.file.secure_url,
+        url: req.file.url,
+        originalname: req.file.originalname
+      })}`);
+      const url = getUploadedFileUrl(req.file, 'image');
+      if (url) return [url];
+    }
+    
+    logger.warn(`⚠️ No files found in req.files or req.file`);
+    return [];
+  }
+
+  logger.info(`📤 Processing ${req.files.length} files`);
+  const paths = [];
+  
+  for (let idx = 0; idx < req.files.length; idx++) {
+    try {
+      const f = req.files[idx];
+      logger.info(`📤 Processing file ${idx}: ${JSON.stringify({
+        filename: f.filename,
+        secure_url: f.secure_url?.substring(0, 50),
+        url: f.url?.substring(0, 50),
+        originalname: f.originalname
+      })}`);
+      
       const url = getUploadedFileUrl(f, 'image');
       if (!url) {
-        throw new HttpError(500, 'Image upload failed - no URL returned from storage');
+        logger.error(`❌ File ${idx} has no valid URL. File object: ${JSON.stringify(f)}`);
+        throw new HttpError(500, `Image upload failed for file ${idx} - no URL returned from storage`);
       }
-      return url;
-    });
-    if (paths.length === 0) {
-      throw new HttpError(500, 'Image upload failed - no files processed');
+      paths.push(url);
+      logger.info(`✅ File ${idx} successfully processed: ${url.substring(0, 50)}...`);
+    } catch (error) {
+      logger.error(`❌ Error processing file ${idx}: ${error.message}`);
+      throw error;
     }
-    logger.info(`📤 Generated ${paths.length} image paths`);
-    return paths;
   }
-  logger.warn(`⚠️ No files found in req.files`);
-  return [];
+  
+  if (paths.length === 0) {
+    throw new HttpError(500, 'Image upload failed - no files processed successfully');
+  }
+  
+  logger.info(`✅ Generated ${paths.length} image paths successfully`);
+  return paths;
 }
 
 async function fetchProducts({ whereClause = '', params = {} } = {}) {
