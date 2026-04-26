@@ -12,18 +12,34 @@ import env from '../config/env.js';
 function getUploadedFileUrl(file, resourceType = 'image') {
   if (!file) return null;
   
-  logger.info(`Debug: file.secure_url=${file.secure_url}, file.filename=${file.filename}`);
+  logger.info(`📸 File object: ${JSON.stringify({
+    secure_url: file.secure_url,
+    public_id: file.public_id,
+    url: file.url,
+    filename: file.filename,
+    path: file.path,
+    keys: Object.keys(file).slice(0, 10)
+  })}`);
   
-  // Cloudinary: secure_url is set directly
+  // Cloudinary v4: secure_url is set directly
   if (file.secure_url) {
+    logger.info(`✅ Using secure_url: ${file.secure_url}`);
     return file.secure_url;
+  }
+  
+  // Fallback: try url property
+  if (file.url) {
+    logger.info(`✅ Using url: ${file.url}`);
+    return file.url;
   }
   
   // Local storage fallback
   if (file.filename) {
+    logger.info(`✅ Using local filename: /uploads/products/${file.filename}`);
     return `/uploads/products/${file.filename}`;
   }
   
+  logger.error(`❌ No valid URL found in file object`);
   return null;
 }
 
@@ -57,23 +73,26 @@ function parseSizeStock(rawValue) {
 }
 
 function getNewImagePaths(req) {
-  logger.info(`Debug: req.files=${JSON.stringify(req.files)}`);
+  logger.info(`📤 getNewImagePaths called`);
+  logger.info(`📤 req.files: ${req.files ? `${req.files.length} files` : 'undefined'}`);
   
   if (req.files && req.files.length > 0) {
+    logger.info(`📤 Processing ${req.files.length} files`);
     const paths = req.files.map((f, idx) => {
-      logger.info(`Debug: Processing file ${idx}: ${JSON.stringify(f)}`);
+      logger.info(`📤 Processing file ${idx}`);
       const url = getUploadedFileUrl(f, 'image');
       if (!url) {
         throw new HttpError(500, 'Image upload failed - no URL returned from storage');
       }
-      logger.info(`Debug: Generated URL: ${url}`);
       return url;
     });
     if (paths.length === 0) {
       throw new HttpError(500, 'Image upload failed - no files processed');
     }
+    logger.info(`📤 Generated ${paths.length} image paths`);
     return paths;
   }
+  logger.warn(`⚠️ No files found in req.files`);
   return [];
 }
 
@@ -200,15 +219,22 @@ export async function createProduct(req, res) {
   });
 
   const data = schema.parse(req.body);
+  logger.info(`📤 CREATE PRODUCT: received request for "${data.name}"`);
+  logger.info(`📤 req.files: ${JSON.stringify(req.files?.length || 0)} files`);
+  
   const imagePaths = getNewImagePaths(req);
+  logger.info(`📤 imagePaths from getNewImagePaths: ${JSON.stringify(imagePaths)}`);
+  
   const sizeStock = parseSizeStock(req.body.sizeStock || {});
 
   if (imagePaths.length === 0) {
+    logger.error('❌ No images provided');
     throw new HttpError(400, 'At least one product image is required');
   }
 
   // Validate image paths are valid URLs or paths
   imagePaths.forEach((path, idx) => {
+    logger.info(`📤 Image ${idx}: ${path}`);
     if (typeof path !== 'string' || path.length === 0) {
       throw new HttpError(500, `Invalid image path at index ${idx}`);
     }
@@ -216,6 +242,9 @@ export async function createProduct(req, res) {
 
   const primaryImage = imagePaths[0];
   const imagesJson = JSON.stringify(imagePaths);
+  
+  logger.info(`📤 Primary image: ${primaryImage}`);
+  logger.info(`📤 Images JSON: ${imagesJson}`);
 
   // Verify JSON is valid and parseable
   try {
@@ -312,6 +341,8 @@ export async function createProduct(req, res) {
   // Invalidate all product list caches on create
   invalidateCache('products:list:*');
 
+  logger.info(`✅ PRODUCT CREATED: ID=${createdProduct.id}, images=${JSON.stringify(createdProduct.images)}`);
+  
   res.status(201).json({ message: 'Product created successfully', product: createdProduct });
 }
 

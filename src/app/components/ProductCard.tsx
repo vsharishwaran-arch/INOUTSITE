@@ -190,8 +190,22 @@ function ProductCardComponent({ product, dark }: ProductCardProps) {
   const hoverImg = useMemo(() => hasMultipleImages ? product.images![1] : null, [hasMultipleImages, product.images]);
 
   // Memoize optimized image URLs
-  const optimizedPrimaryImage = useMemo(() => getOptimizedImageUrl(product.image, { width: 400 }), [product.image]);
-  const optimizedHoverImage = useMemo(() => hoverImg ? getOptimizedImageUrl(hoverImg, { width: 400 }) : null, [hoverImg]);
+  const optimizedPrimaryImage = useMemo(() => {
+    if (!product.image) {
+      console.warn(`ProductCard: No image for product ${product.id} (${product.name})`);
+      return '/placeholder.png';
+    }
+    const optimized = getOptimizedImageUrl(product.image, { width: 400 });
+    console.debug(`ProductCard: ${product.id} image optimized: ${product.image} -> ${optimized}`);
+    return optimized || '/placeholder.png';
+  }, [product.image, product.id]);
+  
+  const optimizedHoverImage = useMemo(() => {
+    if (!hoverImg) return null;
+    const optimized = getOptimizedImageUrl(hoverImg, { width: 400 });
+    console.debug(`ProductCard: ${product.id} hover image: ${hoverImg} -> ${optimized}`);
+    return optimized;
+  }, [hoverImg, product.id]);
 
   const handleQuickAdd = (e: React.MouseEvent, size: string) => {
     e.preventDefault();

@@ -26,24 +26,28 @@ export function getOptimizedImageUrl(url, options = {}) {
   } = options;
 
   try {
-    // For Cloudinary URLs, inject transformation parameters
-    // Format: https://res.cloudinary.com/{cloud}/{resource_type}/{type}/{id}/v{version}/{transformations}/{public_id}
+    // Build transformation string
+    const transformation = `w_${width},q_${quality},f_${format},c_${crop},g_${gravity}`;
     
-    // Find the position to insert transformations (after /v{version}/)
-    const cloudinaryMatch = url.match(/(.*\/v\d+\/)(.*)/);
-    if (cloudinaryMatch) {
-      const baseUrl = cloudinaryMatch[1];
-      const restOfUrl = cloudinaryMatch[2];
-      
-      // Build transformation string
-      const transformation = `w_${width},q_${quality},f_${format},c_${crop},g_${gravity}`;
-      
+    // Handle URLs with /v{version}/ (older format)
+    const cloudinaryMatchWithVersion = url.match(/(.*\/v\d+\/)(.*)/);
+    if (cloudinaryMatchWithVersion) {
+      const baseUrl = cloudinaryMatchWithVersion[1];
+      const restOfUrl = cloudinaryMatchWithVersion[2];
       return `${baseUrl}${transformation}/${restOfUrl}`;
     }
+    
+    // Handle standard format: https://res.cloudinary.com/{cloud_name}/image/upload/{public_id}
+    // or: https://res.cloudinary.com/{cloud_name}/video/upload/{public_id}
+    const cloudinaryMatch = url.match(/(.*\/upload\/)(.+)$/);
+    if (cloudinaryMatch) {
+      const baseUrl = cloudinaryMatch[1];
+      const publicId = cloudinaryMatch[2];
+      return `${baseUrl}${transformation}/${publicId}`;
+    }
 
-    // Fallback: if URL doesn't match expected pattern, append query params
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}w=${width}&q=${quality}&f=${format}`;
+    // Fallback: return original URL if pattern doesn't match
+    return url;
   } catch (error) {
     // Return original URL if optimization fails
     return url;

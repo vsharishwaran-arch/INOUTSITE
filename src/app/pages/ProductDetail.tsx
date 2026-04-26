@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useProductCatalog } from '../context/ProductCatalogContext';
 import { ProductCard } from '../components/ProductCard';
 import { fetchProductById } from '../lib/api';
+import { getOptimizedImageUrl } from '../lib/imageOptimization';
 import type { Product } from '../data/products';
 
 // ─── Inline SVG Icons ─────────────────────────────────────────────────────────
@@ -157,7 +158,24 @@ export function ProductDetail() {
     );
   }
 
-  const images = (product.images && product.images.length > 0) ? product.images : [product.image];
+  const images = (product.images && product.images.length > 0) 
+    ? product.images.filter(img => img && img.trim()) 
+    : (product.image && product.image.trim() ? [product.image] : ['/placeholder.png']);
+  
+  if (images.length === 0) {
+    images.push('/placeholder.png');
+  }
+  
+  // Optimize images for display
+  const optimizedImages = useMemo(() => 
+    images.map(img => getOptimizedImageUrl(img, { width: 600 })), 
+    [images]
+  );
+  
+  const optimizedThumbImages = useMemo(() => 
+    images.map(img => getOptimizedImageUrl(img, { width: 200 })), 
+    [images]
+  );
   const discountPct = product.discountPrice ? Math.round(((product.price - product.discountPrice) / product.price) * 100) : null;
   const getSizeStock = (size: string) => product.sizeStock?.[size] ?? product.stock;
   const selectedSizeStock = selectedSize ? getSizeStock(selectedSize) : product.stock;
@@ -238,7 +256,7 @@ export function ProductDetail() {
             {/* Vertical thumbnail strip */}
             {images.length > 1 && (
               <div className="pdp-thumbs-col" style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
-                {images.map((img, i) => (
+                {optimizedThumbImages.map((img, i) => (
                   <button key={i} onClick={() => setActiveImage(i)}
                     style={{ width: 72, height: 90, padding: 0, border: `2px solid ${activeImage === i ? '#111' : '#e0e0e0'}`, borderRadius: 6, background: '#f5f5f3', cursor: 'pointer', overflow: 'hidden', flexShrink: 0, transition: 'border-color 0.2s' }}>
                     <img src={img} alt={`thumb ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -252,7 +270,7 @@ export function ProductDetail() {
               onMouseEnter={() => setZoomVisible(true)}
               onMouseLeave={() => setZoomVisible(false)}
             >
-              <img src={images[activeImage]} alt={`${product.name} view ${activeImage + 1}`}
+              <img src={optimizedImages[activeImage]} alt={`${product.name} view ${activeImage + 1}`}
                 style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'opacity 0.3s' }} />
               <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', opacity: zoomVisible ? 1 : 0, transition: 'opacity 0.25s', pointerEvents: 'none' }}>
                 <IconZoomIn />

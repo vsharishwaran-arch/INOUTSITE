@@ -189,9 +189,13 @@ export function Home() {
                               className="w-full h-full object-cover"
                               draggable={false}
                             />
-                          ) : ci.image ? (
+                          ) : ci.image && ci.image.trim() ? (
                             <img src={ci.image} alt={ci.title} draggable={false} />
-                          ) : null}
+                          ) : (
+                            <div style={{ width: '100%', height: '100%', background: '#f5f5f3', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontSize: 12 }}>
+                              No image
+                            </div>
+                          )}
                           {(ci.title || ci.subtitle) && (
                             <div className="carousel-card-label">
                               {ci.title && <span className="carousel-card-name">{ci.title}</span>}
