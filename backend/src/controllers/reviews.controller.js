@@ -18,16 +18,29 @@ export async function listPublicReviews(req, res) {
       return res.json({ items: cached });
     }
 
-    const [rows] = await pool.query(
-      `SELECT r.id, r.customer_name, r.rating, r.comment, r.created_at,
-              COALESCE(r.product_name, p.name) AS product_name
-       FROM reviews r
-       LEFT JOIN products p ON p.id = r.product_id
-       WHERE r.is_approved = 1
-       ORDER BY r.created_at DESC
-       LIMIT ?`,
-      [limit],
-    );
+    // Simplified query to debug any issues
+    let rows;
+    try {
+      const result = await pool.query(
+        `SELECT r.id, r.customer_name, r.rating, r.comment, r.created_at,
+                COALESCE(r.product_name, p.name) AS product_name
+         FROM reviews r
+         LEFT JOIN products p ON p.id = r.product_id
+         WHERE r.is_approved = true
+         ORDER BY r.created_at DESC
+         LIMIT $1`,
+        [limit],
+      );
+      rows = result[0];
+    } catch (queryErr) {
+      logger.error(`❌ Query failed: ${queryErr.message}`);
+      // Try simpler query to debug
+      const simpleResult = await pool.query(
+        `SELECT id, customer_name, rating, comment, created_at, product_name FROM reviews WHERE is_approved = true ORDER BY created_at DESC LIMIT $1`,
+        [limit],
+      );
+      rows = simpleResult[0];
+    }
 
     logger.info(`✅ Retrieved ${rows.length} public reviews from DB`);
 
@@ -58,15 +71,16 @@ export async function listReviews(req, res) {
 
   let whereClause = '';
   const params = [];
+  let paramIndex = 1;
 
   const conditions = [];
   if (productId) {
-    conditions.push('r.product_id = ?');
+    conditions.push(`r.product_id = $${paramIndex++}`);
     params.push(productId);
   }
   if (approved !== undefined) {
-    conditions.push('r.is_approved = ?');
-    params.push(approved === 'true' ? 1 : 0);
+    conditions.push(`r.is_approved = $${paramIndex++}`);
+    params.push(approved === 'true');
   }
   if (conditions.length) whereClause = `WHERE ${conditions.join(' AND ')}`;
 
@@ -106,7 +120,7 @@ export async function approveReview(req, res) {
   try {
     logger.info(`✅ Approving review ${req.params.id}`);
     const [result] = await pool.query(
-      'UPDATE reviews SET is_approved = TRUE WHERE id = ?',
+      'UPDATE reviews SET is_approved = true WHERE id = $1',
       [req.params.id],
     );
     if (result.affectedRows === 0) {
@@ -128,7 +142,7 @@ export async function approveReview(req, res) {
 export async function deleteReview(req, res) {
   try {
     logger.info(`🗑️ Deleting review ${req.params.id}`);
-    const [result] = await pool.query('DELETE FROM reviews WHERE id = ?', [req.params.id]);
+    const [result] = await pool.query('DELETE FROM reviews WHERE id = $1', [req.params.id]);
     if (result.affectedRows === 0) {
       logger.warn(`⚠️ Review ${req.params.id} not found`);
       throw new HttpError(404, 'Review not found');
@@ -157,7 +171,7 @@ export async function createReview(req, res) {
 
     const [result] = await pool.query(
       `INSERT INTO reviews (product_id, customer_name, customer_email, rating, comment)
-       VALUES (?, ?, ?, ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5)`,
       [data.productId, data.customerName, data.customerEmail, data.rating, data.comment],
     );
 
@@ -179,11 +193,11 @@ export async function updateReview(req, res) {
     const { customerName, rating, comment, productName } = req.body;
     const [result] = await pool.query(
       `UPDATE reviews SET
-         customer_name = COALESCE(?, customer_name),
-         rating = COALESCE(?, rating),
-         comment = COALESCE(?, comment),
-         product_name = COALESCE(?, product_name)
-       WHERE id = ?`,
+         customer_name = COALESCE($1, customer_name),
+         rating = COALESCE($2, rating),
+         comment = COALESCE($3, comment),
+         product_name = COALESCE($4, product_name)
+       WHERE id = $5`,
       [customerName ?? null, rating ?? null, comment ?? null, productName ?? null, id],
     );
     if (result.affectedRows === 0) {
@@ -213,7 +227,7 @@ export async function adminCreateReview(req, res) {
     // Insert with NULL product_id (admin-created, no product link required)
     const [result] = await pool.query(
       `INSERT INTO reviews (product_id, product_name, customer_name, customer_email, rating, comment, is_approved)
-       VALUES (NULL, ?, ?, ?, ?, ?, 1)`,
+       VALUES (NULL, $1, $2, $3, $4, $5, true)`,
       [data.productName || null, data.customerName, 'admin@inoutfashion.in', data.rating, data.comment],
     );
     logger.info(`✅ Admin review created with ID ${result.insertId}`);
