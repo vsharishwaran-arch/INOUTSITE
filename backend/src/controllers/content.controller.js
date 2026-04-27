@@ -86,6 +86,32 @@ export const getAllContent = asyncHandler(async (_req, res) => {
     }
   }
 
+  // CATEGORIES: Parse items and ensure image field is always populated
+  if (result.categories?.items) {
+    try {
+      const items = JSON.parse(result.categories.items);
+      logger.info(`🏷️ Parsed categories: ${items.length} items`);
+      
+      // Map each category to ensure image field is always present and valid
+      const mappedItems = items.map((item, idx) => {
+        if (!item.image) {
+          logger.warn(`⚠️ Category ${item.slug} missing image field`);
+        } else {
+          logger.info(`✅ Category ${item.slug} image: ${item.image.substring(0, 50)}...`);
+        }
+
+        return {
+          ...item,
+          image: item.image || '' // Ensure image field always exists
+        };
+      });
+
+      result.categories.items = JSON.stringify(mappedItems);
+    } catch (e) {
+      logger.error(`❌ Failed to parse categories JSON: ${e.message}`);
+    }
+  }
+
   res.json(result);
 });
 
@@ -130,6 +156,32 @@ export const getSectionContent = asyncHandler(async (req, res) => {
       result.slides = JSON.stringify(mappedSlides);
     } catch (e) {
       logger.error(`❌ Failed to parse hero slides JSON: ${e.message}`);
+    }
+  }
+
+  // CATEGORIES: Parse items and ensure image field is always populated
+  if (section === 'categories' && result.items) {
+    try {
+      const items = JSON.parse(result.items);
+      logger.info(`🏷️ Parsed categories (getSectionContent): ${items.length} items`);
+      
+      // Map each category to ensure image field is always present and valid
+      const mappedItems = items.map((item, idx) => {
+        if (!item.image) {
+          logger.warn(`⚠️ Category ${item.slug} missing image field`);
+        } else {
+          logger.info(`✅ Category ${item.slug} image: ${item.image.substring(0, 50)}...`);
+        }
+
+        return {
+          ...item,
+          image: item.image || '' // Ensure image field always exists
+        };
+      });
+
+      result.items = JSON.stringify(mappedItems);
+    } catch (e) {
+      logger.error(`❌ Failed to parse categories JSON: ${e.message}`);
     }
   }
 
