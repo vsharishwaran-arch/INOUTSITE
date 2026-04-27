@@ -159,7 +159,7 @@ export function AdminAnalytics() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-right font-medium">{item.totalSold}</td>
-                  <td className="px-4 py-3 text-right font-medium">₹{item.totalRevenue.toFixed(2)}</td>
+                  <td className="px-4 py-3 text-right font-medium">₹{(item.totalRevenue || 0).toFixed(2)}</td>
                   <td className="px-4 py-3 text-right text-muted-foreground">{item.orderCount}</td>
                 </tr>
               ))}
