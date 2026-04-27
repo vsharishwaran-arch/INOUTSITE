@@ -88,8 +88,8 @@ export async function listReviews(req, res) {
     logger.info(`📋 Fetching reviews: productId=${productId}, approved=${approved}`);
     
     const [rows] = await pool.query(
-      `SELECT r.id, r.product_id, r.product_name, r.customer_name, r.customer_email, r.rating, r.comment, r.is_approved, r.created_at,
-              COALESCE(r.product_name, p.name) AS resolved_product_name
+      `SELECT r.id, r.product_id, r.customer_name, r.customer_email, r.rating, r.comment, r.is_approved, r.created_at,
+              p.name AS product_name
        FROM reviews r
        LEFT JOIN products p ON p.id = r.product_id
        ${whereClause}
@@ -99,14 +99,7 @@ export async function listReviews(req, res) {
 
     logger.info(`✅ Retrieved ${rows.length} reviews`);
 
-    const items = rows.map(row => {
-      const mapped = mapReview(row);
-      // If review doesn't have a product_name but we resolved one from products table, use it
-      if (!mapped.productName && row.resolved_product_name) {
-        mapped.productName = row.resolved_product_name;
-      }
-      return mapped;
-    });
+    const items = rows.map(row => mapReview(row));
 
     res.json({ items });
   } catch (err) {
@@ -190,15 +183,14 @@ export async function updateReview(req, res) {
   try {
     const { id } = req.params;
     logger.info(`✏️ Updating review ${id}`);
-    const { customerName, rating, comment, productName } = req.body;
+    const { customerName, rating, comment } = req.body;
     const [result] = await pool.query(
       `UPDATE reviews SET
          customer_name = COALESCE($1, customer_name),
          rating = COALESCE($2, rating),
-         comment = COALESCE($3, comment),
-         product_name = COALESCE($4, product_name)
-       WHERE id = $5`,
-      [customerName ?? null, rating ?? null, comment ?? null, productName ?? null, id],
+         comment = COALESCE($3, comment)
+       WHERE id = $4`,
+      [customerName ?? null, rating ?? null, comment ?? null, id],
     );
     if (result.affectedRows === 0) {
       logger.warn(`⚠️ Review ${id} not found`);
@@ -219,16 +211,15 @@ export async function adminCreateReview(req, res) {
       customerName: z.string().min(1),
       rating: z.coerce.number().int().min(1).max(5),
       comment: z.string().optional().default(''),
-      productName: z.string().optional().default(''),
     });
     const data = schema.parse(req.body);
     logger.info(`✅ Admin review data validated`);
     
     // Insert with NULL product_id (admin-created, no product link required)
     const [result] = await pool.query(
-      `INSERT INTO reviews (product_id, product_name, customer_name, customer_email, rating, comment, is_approved)
-       VALUES (NULL, $1, $2, $3, $4, $5, true)`,
-      [data.productName || null, data.customerName, 'admin@inoutfashion.in', data.rating, data.comment],
+      `INSERT INTO reviews (product_id, customer_name, customer_email, rating, comment, is_approved)
+       VALUES (NULL, $1, $2, $3, $4, true)`,
+      [data.customerName, 'admin@inoutfashion.in', data.rating, data.comment],
     );
     logger.info(`✅ Admin review created with ID ${result.insertId}`);
     res.status(201).json({ message: 'Review created', reviewId: String(result.insertId) });
@@ -242,7 +233,7 @@ function mapReview(row) {
   return {
     id: String(row.id),
     productId: row.product_id ? String(row.product_id) : null,
-    productName: row.product_name || '',
+    productName: row.product_name || row.resolved_product_name || '',
     customerName: row.customer_name,
     customerEmail: row.customer_email,
     rating: Number(row.rating),
