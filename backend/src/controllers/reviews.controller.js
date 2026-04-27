@@ -36,7 +36,7 @@ export async function listPublicReviews(req, res) {
       logger.error(`❌ Query failed: ${queryErr.message}`);
       // Try simpler query to debug
       const simpleResult = await pool.query(
-        `SELECT id, customer_name, rating, comment, created_at, product_name FROM reviews WHERE is_approved = true ORDER BY created_at DESC LIMIT $1`,
+        `SELECT id, customer_name, rating, comment, created_at FROM reviews WHERE is_approved = true ORDER BY created_at DESC LIMIT $1`,
         [limit],
       );
       rows = simpleResult[0];

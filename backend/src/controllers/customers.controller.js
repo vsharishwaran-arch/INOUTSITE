@@ -15,7 +15,7 @@ export async function listCustomers(req, res) {
       MIN(o.created_at) AS firstOrderDate
     FROM orders o
     LEFT JOIN users u ON u.id = o.user_id
-    GROUP BY o.guest_email
+    GROUP BY u.id, o.guest_email, u.first_name, u.last_name, o.shipping_first_name, o.shipping_last_name, u.phone, o.guest_phone
     ORDER BY totalSpent DESC
   `);
 
